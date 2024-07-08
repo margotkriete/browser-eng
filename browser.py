@@ -1,13 +1,55 @@
 import socket
 import ssl
+import tkinter
 
-
+WIDTH, HEIGHT = 800, 600
+SCROLL_STEP = 100
 TEST_FILE = "/Users/margotkriete/Desktop/test.txt"
+HSTEP, VSTEP = 13, 18
+
+
+class Browser:
+    def __init__(self):
+        self.window = tkinter.Tk()
+        self.canvas = tkinter.Canvas(self.window, width=WIDTH, height=HEIGHT)
+        self.canvas.pack()
+        self.scroll = 0
+        self.window.bind("<Down>", self.scrolldown)
+
+    def load(self, url: str) -> None:
+        body = url.request()
+        text = lex(body)
+        self.display_list = layout(text)
+        self.draw()
+
+    def draw(self):
+        self.canvas.delete("all")
+        for x, y, c in self.display_list:
+            if y > self.scroll + HEIGHT:
+                continue
+            if y + VSTEP < self.scroll:
+                continue
+            self.canvas.create_text(x, y - self.scroll, text=c)
+
+    def scrolldown(self, e):
+        self.scroll += SCROLL_STEP
+        self.draw()
+
+
+def layout(text) -> "list[tuple[int, int, str]]":
+    cursor_x, cursor_y = HSTEP, VSTEP
+    display_list = []
+    for c in text:
+        display_list.append((cursor_x, cursor_y, c))
+        cursor_x += HSTEP
+        if cursor_x >= WIDTH - HSTEP:
+            cursor_y += VSTEP
+            cursor_x = HSTEP
+    return display_list
 
 
 class URL:
     def __init__(self, url: str) -> None:
-
         self.scheme, url = url.split("://", 1)
         assert self.scheme in ["http", "https", "file"]
 
@@ -78,7 +120,8 @@ class URL:
             return content
 
 
-def show(body: str) -> None:
+def lex(body: str) -> str:
+    text = ""
     in_tag = False
     for c in body:
         if c == "<":
@@ -86,18 +129,15 @@ def show(body: str) -> None:
         elif c == ">":
             in_tag = False
         elif not in_tag:
-            print(c, end="")  # print non-tag characters
-
-
-def load(url: str) -> None:
-    body = url.request()
-    show(body)
+            text += c
+    return text
 
 
 if __name__ == "__main__":
     import sys
 
     if len(sys.argv) > 1:
-        load(URL(sys.argv[1]))
+        Browser().load(URL(sys.argv[1]))
+        tkinter.mainloop()
     else:
-        load(URL(f"file://{TEST_FILE}"))
+        Browser().load(URL(f"file://{TEST_FILE}"))
