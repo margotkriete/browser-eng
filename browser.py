@@ -19,6 +19,8 @@ class Browser:
         self.window.bind("<MouseWheel>", self.mousescroll)
 
     def load(self, url: str) -> None:
+        if url.host == "about:blank":
+            return
         body = url.request()
         text = lex(body)
         self.display_list = layout(text)
@@ -64,36 +66,40 @@ def layout(text) -> "list[tuple[int, int, str]]":
 
 class URL:
     def __init__(self, url: str) -> None:
-        self.scheme, url = url.split("://", 1)
-        assert self.scheme in ["http", "https", "file"]
+        try:
+            self.scheme, url = url.split("://", 1)
+            assert self.scheme in ["http", "https", "file"]
 
-        if self.scheme == "http" or self.scheme == "file":
-            self.port = 80
-        elif self.scheme == "https":
-            self.port = 443
+            if self.scheme == "http" or self.scheme == "file":
+                self.port = 80
+            elif self.scheme == "https":
+                self.port = 443
 
-        if "/" not in url:
-            url = url + "/"
+            if "/" not in url:
+                url = url + "/"
 
-        if self.scheme != "file":
-            self.host, url = url.split("/", 1)
-            self.path = "/" + url
-            if ":" in self.host:
-                self.host, port = self.host.split(":", 1)
-                self.port = int(port)
-        else:
-            self.host = "localhost"
-            self.path = url
+            if self.scheme != "file":
+                self.host, url = url.split("/", 1)
+                self.path = "/" + url
+                if ":" in self.host:
+                    self.host, port = self.host.split(":", 1)
+                    self.port = int(port)
+            else:
+                self.host = "localhost"
+                self.path = url
+        except ValueError:
+            self.host = "about:blank"
 
     def append_header(self, req, header, val) -> str:
         req += f"{header}: {val}\r\n"
         return req
 
     def request(self) -> str:
+        assert self.scheme
         if self.scheme == "file":
             with open(self.path, encoding="utf-8") as f:
                 return f.read()
-        else:
+        elif self.scheme in ["http", "https"]:
             s = (
                 socket.socket()
             )  # defaults: addr family AF_INET, type SOCKET_STREAM, protocol IPPROTO_TCP
