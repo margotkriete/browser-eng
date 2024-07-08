@@ -22,6 +22,10 @@ class URL:
             self.host, port = self.host.split(":", 1)
             self.port = int(port)
 
+    def append_header(self, req, header, val) -> str:
+        req += f"{header}: {val}\r\n"
+        return req
+
     def request(self) -> str:
         s = (
             socket.socket()
@@ -33,7 +37,9 @@ class URL:
             s = ctx.wrap_socket(s, server_hostname=self.host)
 
         req = f"GET {self.path} HTTP/1.0\r\n"
-        req += f"Host: {self.host}\r\n"
+        req = self.append_header(req, "Host", self.host)
+        req = self.append_header(req, "Connection", "close")
+        req = self.append_header(req, "User-Agent", "Margot's Browser")
         req += "\r\n"
         s.send(req.encode("utf8"))  # encode to convert to bytes
 
@@ -57,7 +63,7 @@ class URL:
         return content
 
 
-def show(body):
+def show(body: str) -> None:
     in_tag = False
     for c in body:
         if c == "<":
@@ -68,7 +74,7 @@ def show(body):
             print(c, end="")  # print non-tag characters
 
 
-def load(url: str):
+def load(url: str) -> None:
     body = url.request()
     show(body)
 
