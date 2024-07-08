@@ -15,6 +15,8 @@ class Browser:
         self.canvas.pack()
         self.scroll = 0
         self.window.bind("<Down>", self.scrolldown)
+        self.window.bind("<Up>", self.scrollup)
+        self.window.bind("<MouseWheel>", self.mousescroll)
 
     def load(self, url: str) -> None:
         body = url.request()
@@ -35,11 +37,23 @@ class Browser:
         self.scroll += SCROLL_STEP
         self.draw()
 
+    def scrollup(self, e):
+        if self.scroll >= SCROLL_STEP:
+            self.scroll -= SCROLL_STEP
+        self.draw()
+
+    def mousescroll(self, e):
+        self.scroll -= e.delta
+        self.draw()
+
 
 def layout(text) -> "list[tuple[int, int, str]]":
     cursor_x, cursor_y = HSTEP, VSTEP
     display_list = []
     for c in text:
+        if c == "\n":
+            cursor_y += VSTEP
+            cursor_x = HSTEP
         display_list.append((cursor_x, cursor_y, c))
         cursor_x += HSTEP
         if cursor_x >= WIDTH - HSTEP:
