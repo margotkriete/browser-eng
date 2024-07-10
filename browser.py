@@ -1,7 +1,7 @@
 import socket
 import ssl
 import tkinter
-from urllib.parse import urlparse
+from tkinter import ttk
 
 WIDTH, HEIGHT = 800, 600
 SCROLL_STEP = 100
@@ -12,14 +12,36 @@ HSTEP, VSTEP = 13, 18
 class Browser:
     def __init__(self):
         self.window = tkinter.Tk()
-        self.canvas = tkinter.Canvas(self.window, width=WIDTH, height=HEIGHT)
+        style = ttk.Style()
+        style.configure("TScrollbar", background="#002fa7")
+        self.scrollbar = ttk.Scrollbar(self.window, style="TScrollbar")
+        self.scrollbar.pack(side=tkinter.RIGHT, fill=tkinter.Y)
+        self.canvas = tkinter.Canvas(
+            self.window,
+            width=WIDTH,
+            height=HEIGHT,
+            yscrollcommand=self.scrollbar.set,
+            scrollregion=(0, 0, HEIGHT, WIDTH),
+        )
+        # self.scrollbar.config(command=self.scrollbar_handler)
+        self.scrollbar.config(command=self.canvas.yview)
         self.canvas.pack(fill="both", expand=1)
         self.scroll = 0
         self.window.bind("<Down>", self.scrolldown)
         self.window.bind("<Up>", self.scrollup)
         self.window.bind("<MouseWheel>", self.mousescroll)
         self.window.bind("<Configure>", self.resize)
-        self.current_height = HEIGHT
+        self.screen_height = HEIGHT
+
+    def _get_max_coordinate(self):
+        return self.display_list[len(self.display_list) - 1][1]
+
+    def scrollbar_handler(self, *opts):
+        op, quantity = opts[0], opts[1]
+        updated_scroll = self.scroll + float(quantity) * HEIGHT
+        if updated_scroll < self._get_max_coordinate():
+            self.scroll = updated_scroll
+            self.draw()
 
     def load(self, url: str) -> None:
         body = url.request()
@@ -28,17 +50,23 @@ class Browser:
         self.draw()
 
     def draw(self):
+        # Draw elements using coordinates generated in layout(). Read from
+        # self.scroll to only draw coordinates in the screen.
         self.canvas.delete("all")
         for x, y, c in self.display_list:
-            if y > self.scroll + self.current_height:
+            if y > self.scroll + self.screen_height:
                 continue
             if y + VSTEP < self.scroll:
                 continue
             self.canvas.create_text(x, y - self.scroll, text=c)
 
     def scrolldown(self, e):
-        self.scroll += SCROLL_STEP
-        self.draw()
+        updated_scroll = self.scroll + SCROLL_STEP + self.screen_height
+
+        # Only update self.scroll if there's more to display
+        if updated_scroll < self._get_max_coordinate():
+            self.scroll += SCROLL_STEP
+            self.draw()
 
     def scrollup(self, e):
         if self.scroll >= SCROLL_STEP:
@@ -46,23 +74,31 @@ class Browser:
         self.draw()
 
     def mousescroll(self, e):
-        self.scroll -= e.delta
-        self.draw()
+        updated_scroll = self.scroll - e.delta + self.screen_height
+        if (updated_scroll < self._get_max_coordinate()) and (
+            self.scroll - e.delta > 0
+        ):
+            self.scroll -= e.delta
+            self.draw()
 
+    # Exercise
     def resize(self, e):
-        self.current_height = e.height
+        self.canvas.config(scrollregion=(0, 0, e.height, e.width))
+        self.screen_height = e.height
         self.display_list = layout(self.text, e.width)
         self.draw()
 
 
 def layout(text: str, width: int = WIDTH) -> "list[tuple[int, int, str]]":
+    """
+    Maps x, y coordinates to the character to display at that coordinate.
+    Lays out coordinates for the entire page; draw() handles the current screen.
+    """
     cursor_x, cursor_y = HSTEP, VSTEP
     display_list = []
     for c in text:
         if c == "\n":
-            cursor_y += (
-                VSTEP / 2
-            )  # play around with this? /2 seems small, VSTEP seems too big
+            cursor_y += VSTEP
             cursor_x = HSTEP
         display_list.append((cursor_x, cursor_y, c))
         cursor_x += HSTEP
