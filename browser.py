@@ -1,3 +1,4 @@
+import argparse
 import socket
 import ssl
 import tkinter
@@ -11,7 +12,7 @@ PORTS = {"http": 80, "https": 443}
 
 
 class Browser:
-    def __init__(self):
+    def __init__(self, right_to_left: bool = False):
         self.window = tkinter.Tk()
         style = ttk.Style()
         style.configure("TScrollbar", background="#002fa7")
@@ -33,6 +34,7 @@ class Browser:
         self.window.bind("<MouseWheel>", self.mousescroll)
         self.window.bind("<Configure>", self.resize)
         self.screen_height = HEIGHT
+        self.right_to_left = False
 
     def _get_max_coordinate(self):
         return self.display_list[len(self.display_list) - 1][1]
@@ -48,7 +50,7 @@ class Browser:
     def load(self, url: str) -> None:
         body = url.request()
         self.text = lex(body)
-        self.display_list = layout(self.text)
+        self.display_list = layout(self.text, right_to_left=self.right_to_left)
         self.draw()
 
     def draw(self):
@@ -83,11 +85,16 @@ class Browser:
     # Exercise 2.3
     def resize(self, e):
         self.screen_height = e.height
-        self.display_list = layout(self.text, e.width)
+        self.display_list = layout(self.text, e.width, self.right_to_left)
         self.draw()
 
 
-def layout(text: str, width: int = WIDTH) -> "list[tuple[int, int, str]]":
+def layout(
+    text: str, width: int = WIDTH, right_to_left: bool = False
+) -> "list[tuple[int, int, str]]":
+    if right_to_left:
+        return layout_right_to_left(text, width)
+
     cursor_x, cursor_y = HSTEP, VSTEP
     display_list = []
     for c in text:
@@ -100,6 +107,12 @@ def layout(text: str, width: int = WIDTH) -> "list[tuple[int, int, str]]":
             cursor_y += VSTEP
             cursor_x = HSTEP
     return display_list
+
+
+# Exercise 2.7
+def layout_right_to_left(text: str, width: int = WIDTH):
+    # TODO
+    return
 
 
 class URL:
@@ -149,7 +162,7 @@ class URL:
             return self._request_about_blank()
 
     def _request_file(self) -> str:
-        with open(self.path, "rb", encoding="utf-8") as f:
+        with open(self.path, encoding="utf-8") as f:
             return f.read()
 
     def _request_data(self) -> str:
@@ -210,10 +223,17 @@ def lex(body: str) -> str:
 
 
 if __name__ == "__main__":
-    import sys
-
-    if len(sys.argv) > 1:
-        Browser().load(URL(sys.argv[1]))
-        tkinter.mainloop()
-    else:
-        Browser().load(URL(f"file://{TEST_FILE}"))
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-r", help="Lay characters from right to left", action="store_true"
+    )
+    parser.add_argument(
+        "url",
+        metavar="URL",
+        default=f"file://{TEST_FILE}",
+        help="URL to serve",
+        nargs="?",
+    )
+    args = parser.parse_args()
+    Browser(right_to_left=args.r).load(URL(args.url))
+    tkinter.mainloop()
