@@ -1,6 +1,7 @@
 import socket
 import ssl
 import tkinter
+from tkinter import ttk
 
 WIDTH, HEIGHT = 800, 600
 SCROLL_STEP = 100
@@ -53,15 +54,17 @@ class Browser:
     def draw(self):
         self.canvas.delete("all")
         for x, y, c in self.display_list:
-            if y > self.scroll + self.current_height:
+            if y > self.scroll + self.screen_height:
                 continue
             if y + VSTEP < self.scroll:
                 continue
             self.canvas.create_text(x, y - self.scroll, text=c)
 
     def scrolldown(self, e):
-        self.scroll += SCROLL_STEP
-        self.draw()
+        updated_scroll = self.scroll + SCROLL_STEP + self.screen_height
+        if updated_scroll < self._get_max_coordinate():
+            self.scroll += SCROLL_STEP
+            self.draw()
 
     def scrollup(self, e):
         if self.scroll >= SCROLL_STEP:
@@ -79,7 +82,7 @@ class Browser:
 
     # Exercise 2.3
     def resize(self, e):
-        self.current_height = e.height
+        self.screen_height = e.height
         self.display_list = layout(self.text, e.width)
         self.draw()
 
@@ -89,9 +92,7 @@ def layout(text: str, width: int = WIDTH) -> "list[tuple[int, int, str]]":
     display_list = []
     for c in text:
         if c == "\n":
-            cursor_y += (
-                VSTEP / 2
-            )  # play around with this? /2 seems small, VSTEP seems too big
+            cursor_y += VSTEP
             cursor_x = HSTEP
         display_list.append((cursor_x, cursor_y, c))
         cursor_x += HSTEP
