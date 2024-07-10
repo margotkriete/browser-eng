@@ -13,22 +13,24 @@ class Browser:
     def __init__(self):
         self.window = tkinter.Tk()
         self.canvas = tkinter.Canvas(self.window, width=WIDTH, height=HEIGHT)
-        self.canvas.pack()
+        self.canvas.pack(fill="both", expand=1)
         self.scroll = 0
         self.window.bind("<Down>", self.scrolldown)
         self.window.bind("<Up>", self.scrollup)
         self.window.bind("<MouseWheel>", self.mousescroll)
+        self.window.bind("<Configure>", self.resize)
+        self.current_height = HEIGHT
 
     def load(self, url: str) -> None:
         body = url.request()
-        text = lex(body)
-        self.display_list = layout(text)
+        self.text = lex(body)
+        self.display_list = layout(self.text)
         self.draw()
 
     def draw(self):
         self.canvas.delete("all")
         for x, y, c in self.display_list:
-            if y > self.scroll + HEIGHT:
+            if y > self.scroll + self.current_height:
                 continue
             if y + VSTEP < self.scroll:
                 continue
@@ -47,17 +49,24 @@ class Browser:
         self.scroll -= e.delta
         self.draw()
 
+    def resize(self, e):
+        self.current_height = e.height
+        self.display_list = layout(self.text, e.width)
+        self.draw()
 
-def layout(text) -> "list[tuple[int, int, str]]":
+
+def layout(text: str, width: int = WIDTH) -> "list[tuple[int, int, str]]":
     cursor_x, cursor_y = HSTEP, VSTEP
     display_list = []
     for c in text:
         if c == "\n":
-            cursor_y += VSTEP
+            cursor_y += (
+                VSTEP / 2
+            )  # play around with this? /2 seems small, VSTEP seems too big
             cursor_x = HSTEP
         display_list.append((cursor_x, cursor_y, c))
         cursor_x += HSTEP
-        if cursor_x >= WIDTH - HSTEP:
+        if cursor_x >= width - HSTEP:
             cursor_y += VSTEP
             cursor_x = HSTEP
     return display_list
