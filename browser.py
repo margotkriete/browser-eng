@@ -12,7 +12,7 @@ PORTS = {"http": 80, "https": 443}
 
 
 class Browser:
-    def __init__(self, right_to_left: bool = False):
+    def __init__(self, rtl: bool = False):
         self.window = tkinter.Tk()
         style = ttk.Style()
         style.configure("TScrollbar", background="#002fa7")
@@ -34,7 +34,7 @@ class Browser:
         self.window.bind("<MouseWheel>", self.mousescroll)
         self.window.bind("<Configure>", self.resize)
         self.screen_height = HEIGHT
-        self.right_to_left = False
+        self.rtl = rtl
 
     def _get_max_coordinate(self):
         return self.display_list[len(self.display_list) - 1][1]
@@ -50,7 +50,7 @@ class Browser:
     def load(self, url: str) -> None:
         body = url.request()
         self.text = lex(body)
-        self.display_list = layout(self.text, right_to_left=self.right_to_left)
+        self.display_list = layout(self.text, rtl=self.rtl)
         self.draw()
 
     def draw(self):
@@ -85,34 +85,65 @@ class Browser:
     # Exercise 2.3
     def resize(self, e):
         self.screen_height = e.height
-        self.display_list = layout(self.text, e.width, self.right_to_left)
+        self.display_list = layout(self.text, e.width, self.rtl)
         self.draw()
 
 
 def layout(
-    text: str, width: int = WIDTH, right_to_left: bool = False
+    text: str, width: int = WIDTH, rtl: bool = False
 ) -> "list[tuple[int, int, str]]":
-    if right_to_left:
-        return layout_right_to_left(text, width)
+    if rtl:
+        return layout_rtl(text, width)
 
     cursor_x, cursor_y = HSTEP, VSTEP
     display_list = []
     for c in text:
-        if c == "\n":
-            cursor_y += VSTEP
-            cursor_x = HSTEP
         display_list.append((cursor_x, cursor_y, c))
         cursor_x += HSTEP
+
+        # Wrap text once we reach the edge of the screen
         if cursor_x >= width - HSTEP:
             cursor_y += VSTEP
             cursor_x = HSTEP
+
+        # Increase cursor_y if the character is a newline
+        if c == "\n":
+            cursor_y += VSTEP
+            cursor_x = HSTEP
+
     return display_list
 
 
 # Exercise 2.7
-def layout_right_to_left(text: str, width: int = WIDTH):
-    # TODO
-    return
+def layout_rtl(text: str, width: int = WIDTH):
+    cursor_x = width - HSTEP
+    cursor_y = VSTEP
+    display_list = []
+
+    # Keep track of current line in list, and when you reach
+    # a new line, append existing list to display_list, but lay out in reverse
+    line = []
+    for c in text:
+        # If cursor_x is still within the same line, keep
+        # adding to line array
+        if cursor_x >= HSTEP and c != "\n":
+            line.append(c)
+            cursor_x -= HSTEP
+        else:
+            # If cursor_x is now at the end of the line, lay out line list,
+            # starting from the rightmost edge
+            cursor_x = width - HSTEP
+            line.reverse()
+            for l in line:
+                display_list.append((cursor_x, cursor_y, l))
+                cursor_x -= HSTEP
+            cursor_y += VSTEP
+
+            # Reset cursor_x so the next iteration begins a new line
+            cursor_x = width - HSTEP
+            line = []
+
+    return display_list
 
 
 class URL:
@@ -235,5 +266,5 @@ if __name__ == "__main__":
         nargs="?",
     )
     args = parser.parse_args()
-    Browser(right_to_left=args.r).load(URL(args.url))
+    Browser(rtl=args.r).load(URL(args.url))
     tkinter.mainloop()
