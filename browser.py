@@ -1,23 +1,20 @@
 import argparse
-import socket
-import ssl
 import tkinter
+import tkinter.font
 from tkinter import ttk
+from url import URL
+
 
 WIDTH, HEIGHT = 800, 600
 SCROLL_STEP = 100
 TEST_FILE = "/Users/margotkriete/Desktop/test.txt"
 HSTEP, VSTEP = 13, 18
-PORTS = {"http": 80, "https": 443}
 
 
 class Browser:
     def __init__(self, rtl: bool = False):
         self.window = tkinter.Tk()
-        style = ttk.Style()
-        style.configure("TScrollbar", background="#002fa7")
-        self.scrollbar = ttk.Scrollbar(self.window, style="TScrollbar")
-        self.scrollbar.pack(side=tkinter.RIGHT, fill=tkinter.Y)
+        self._init_scrollbar()
         self.canvas = tkinter.Canvas(
             self.window,
             width=WIDTH,
@@ -26,15 +23,24 @@ class Browser:
             scrollregion=(0, 0, HEIGHT, WIDTH),
         )
         self.scrollbar.config(command=self.scrollbar_handler)
-        # self.scrollbar.config(command=self.canvas.yview)
         self.canvas.pack(fill="both", expand=1)
         self.scroll = 0
+
         self.window.bind("<Down>", self.scrolldown)
         self.window.bind("<Up>", self.scrollup)
         self.window.bind("<MouseWheel>", self.mousescroll)
         self.window.bind("<Configure>", self.resize)
         self.screen_height = HEIGHT
         self.rtl = rtl
+
+        # Size unit is "points," which are 72nds of an inch, not pixels
+        self.bi_times = tkinter.font.Font(family="Times", size=16)
+
+    def _init_scrollbar(self):
+        style = ttk.Style()
+        style.configure("TScrollbar", background="#002fa7")
+        self.scrollbar = ttk.Scrollbar(self.window, style="TScrollbar")
+        self.scrollbar.pack(side=tkinter.RIGHT, fill=tkinter.Y)
 
     def _get_max_coordinate(self):
         return self.display_list[len(self.display_list) - 1][1]
@@ -53,14 +59,16 @@ class Browser:
         self.display_list = layout(self.text, rtl=self.rtl)
         self.draw()
 
-    def draw(self):
+    def draw(self, font=None):
         self.canvas.delete("all")
-        for x, y, c in self.display_list:
+        for x, y, c, font in self.display_list:
+            if not font:
+                font = self.bi_times
             if y > self.scroll + self.screen_height:
                 continue
             if y + VSTEP < self.scroll:
                 continue
-            self.canvas.create_text(x, y - self.scroll, text=c)
+            self.canvas.create_text(x, y - self.scroll, text=c, font=font, anchor="nw")
 
     def scrolldown(self, e):
         updated_scroll = self.scroll + SCROLL_STEP + self.screen_height
@@ -90,27 +98,41 @@ class Browser:
 
 
 def layout(
-    text: str, width: int = WIDTH, rtl: bool = False
+    tokens: "list[str]", width: int = WIDTH, rtl: bool = False
 ) -> "list[tuple[int, int, str]]":
-    if rtl:
-        return layout_rtl(text, width)
+    # if rtl:
+    # return layout_rtl(text, width)
 
     cursor_x, cursor_y = HSTEP, VSTEP
+    weight, style = "normal", "roman"
     display_list = []
-    for c in text:
-        display_list.append((cursor_x, cursor_y, c))
-        cursor_x += HSTEP
 
-        # Wrap text once we reach the edge of the screen
-        if cursor_x >= width - HSTEP:
-            cursor_y += VSTEP
-            cursor_x = HSTEP
+    for token in tokens:
+        if isinstance(token, Text):
+            for word in token.text.split():
+                font = tkinter.font.Font(size=16, weight=weight, slant=style)
+                w = font.measure(word)
+                display_list.append((cursor_x, cursor_y, word, font))
+                cursor_x += w + font.measure(" ")
 
-        # Increase cursor_y if the character is a newline
-        if c == "\n":
-            cursor_y += VSTEP
-            cursor_x = HSTEP
+                # Wrap text once we reach the edge of the screen
+                if cursor_x + w >= width - HSTEP:
+                    cursor_y += font.metrics("linespace") * 1.25
+                    cursor_x = HSTEP
 
+                # Increase cursor_y if the character is a newline
+                if word == "\n":
+                    cursor_y += VSTEP
+                    cursor_x = HSTEP
+        elif token.tag == "i":
+            style = "italic"
+        elif token.tag == "/i":
+            print("found italic", token.tag)
+            style = "roman"
+        elif token.tag == "b":
+            weight = "bold"
+        elif token.tag == "/b":
+            weight = "normal"
     return display_list
 
 
@@ -146,111 +168,35 @@ def layout_rtl(text: str, width: int = WIDTH):
     return display_list
 
 
-class URL:
-
-    def __init__(self, url: str) -> None:
-        try:
-            if url.startswith("data"):
-                self.scheme, url = url.split(":", 1)
-            else:
-                self.scheme, url = url.split("://", 1)
-        except ValueError:
-            self.scheme = "about"
-            return
-
-        self.port = PORTS.get(self.scheme, None)
-
-        if "/" not in url:
-            url = url + "/"
-
-        if self.scheme in ["http", "https"]:
-            self.host, url = url.split("/", 1)
-            self.path = "/" + url
-            if ":" in self.host:
-                self.host, port = self.host.split(":", 1)
-                self.port = int(port)
-        elif self.scheme == "file":
-            self.host = "localhost"
-            self.path = url
-        else:
-            self.media_type, self.data = url.split(",", 1)
-
-    def append_header(self, req, header, val) -> str:
-        req += f"{header}: {val}\r\n"
-        return req
-
-    def request(self):
-        if self.scheme in ["http", "https"]:
-            return self._request_http()
-
-        if self.scheme == "data":
-            return self._request_data()
-
-        if self.scheme == "file":
-            return self._request_file()
-
-        if self.scheme == "about":
-            return self._request_about_blank()
-
-    def _request_file(self) -> str:
-        with open(self.path, encoding="utf-8") as f:
-            return f.read()
-
-    def _request_data(self) -> str:
-        return self.data
-
-    # Exercise 2.6
-    def _request_about_blank(self) -> str:
-        return ""
-
-    def _request_http(self) -> str:
-        s = (
-            socket.socket()
-        )  # defaults: addr family AF_INET, type SOCKET_STREAM, protocol IPPROTO_TCP
-        s.connect((self.host, self.port))
-
-        if self.scheme == "https":
-            ctx = ssl.create_default_context()
-            s = ctx.wrap_socket(s, server_hostname=self.host)
-
-        req = f"GET {self.path} HTTP/1.1\r\n"
-        req = self.append_header(req, "Host", self.host)
-        req = self.append_header(req, "Connection", "close")
-        req = self.append_header(req, "User-Agent", "Margot's Browser")
-        req += "\r\n"
-        s.send(req.encode("utf8"))  # convert to bytes
-
-        response = s.makefile("r", encoding="utf8", newline="\r\n")
-        statusline = response.readline()
-        version, status, explanation = statusline.split(" ", 2)
-
-        response_headers = {}
-        while True:
-            line = response.readline()
-            if line == "\r\n":
-                break
-            header, value = line.split(":", 1)
-            response_headers[header.casefold()] = value.strip()
-
-        assert "transfer-encoding" not in response_headers  # update these in exercise
-        assert "content-encoding" not in response_headers  # update these in exercise
-
-        content = response.read()
-        s.close()
-        return content
+class Text:
+    def __init__(self, text):
+        self.text = text
 
 
-def lex(body: str) -> str:
-    text = ""
+class Tag:
+    def __init__(self, tag):
+        self.tag = tag
+
+
+def lex(body: str) -> "list[str]":
+    buffer = ""
+    out = []
     in_tag = False
     for c in body:
         if c == "<":
-            in_tag = True  # character is in between < >
+            in_tag = True  # word is in between < >
+            if buffer:
+                out.append(Text(buffer))
+            buffer = ""
         elif c == ">":
             in_tag = False
-        elif not in_tag:
-            text += c
-    return text
+            out.append(Tag(buffer))
+            buffer = ""
+        else:
+            buffer += c
+    if not in_tag and buffer:
+        out.append(Text(buffer))
+    return out
 
 
 if __name__ == "__main__":
