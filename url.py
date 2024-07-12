@@ -18,7 +18,6 @@ class URL:
             return
 
         self.port = PORTS.get(self.scheme, None)
-
         if "/" not in url:
             url = url + "/"
 
@@ -90,9 +89,6 @@ class URL:
                 break
             header, value = line.split(":", 1)
             response_headers[header.casefold()] = value.strip()
-
-        assert "transfer-encoding" not in response_headers  # update these in exercise
-        assert "content-encoding" not in response_headers  # update these in exercise
 
         content = response.read()
         s.close()
