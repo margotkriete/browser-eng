@@ -1,15 +1,18 @@
 import argparse
 import tkinter
 import tkinter.font
+from constants import (
+    WIDTH,
+    HEIGHT,
+    HSTEP,
+    VSTEP,
+    SCROLLBAR_WIDTH,
+    SCROLL_STEP,
+    TEST_FILE,
+)
+from layout import Layout, lex
 from tkinter import ttk
 from url import URL
-
-
-WIDTH, HEIGHT = 800, 600
-SCROLL_STEP = 100
-TEST_FILE = "/Users/margotkriete/Desktop/test.txt"
-HSTEP, VSTEP = 13, 18
-SCROLLBAR_WIDTH = 20
 
 
 class Browser:
@@ -39,7 +42,7 @@ class Browser:
     def load(self, url: str) -> None:
         body = url.request()
         self.text = lex(body)
-        self.display_list = layout(self.text, rtl=self.rtl)
+        self.display_list = Layout(self.text, rtl=self.rtl).display_list
         self.draw_scrollbar()
         self.draw()
 
@@ -106,48 +109,9 @@ class Browser:
     def resize(self, e):
         self.screen_height = e.height
         self.screen_width = e.width
-        self.display_list = layout(self.text, self.screen_width, self.rtl)
+        self.display_list = Layout(self.text, self.screen_width, self.rtl).display_list
         self.draw()
         self.draw_scrollbar()
-
-
-def layout(
-    tokens: "list[str]", width: int = WIDTH, rtl: bool = False
-) -> "list[tuple[int, int, str]]":
-    if rtl:
-        return layout_rtl(tokens, width)
-
-    cursor_x, cursor_y = HSTEP, VSTEP
-    weight, style = "normal", "roman"
-    display_list = []
-
-    for token in tokens:
-        if isinstance(token, Text):
-            for word in token.text.split():
-                font = tkinter.font.Font(size=16, weight=weight, slant=style)
-                w = font.measure(word)
-                display_list.append((cursor_x, cursor_y, word, font))
-                cursor_x += w + font.measure(" ")
-
-                # Wrap text once we reach the edge of the screen
-                if cursor_x + w >= width - HSTEP - SCROLLBAR_WIDTH:
-                    cursor_y += font.metrics("linespace") * 1.25
-                    cursor_x = HSTEP
-
-                # Increase cursor_y if the character is a newline
-                if word == "\n":
-                    cursor_y += VSTEP
-                    cursor_x = HSTEP
-        elif token.tag == "i":
-            style = "italic"
-        elif token.tag == "/i":
-            print("found italic", token.tag)
-            style = "roman"
-        elif token.tag == "b":
-            weight = "bold"
-        elif token.tag == "/b":
-            weight = "normal"
-    return display_list
 
 
 # Exercise 2.7
@@ -182,37 +146,6 @@ def layout_rtl(text: str, width: int = WIDTH):
             line = []
 
     return display_list
-
-
-class Text:
-    def __init__(self, text):
-        self.text = text
-
-
-class Tag:
-    def __init__(self, tag):
-        self.tag = tag
-
-
-def lex(body: str) -> "list[str]":
-    buffer = ""
-    out = []
-    in_tag = False
-    for c in body:
-        if c == "<":
-            in_tag = True  # word is in between < >
-            if buffer:
-                out.append(Text(buffer))
-            buffer = ""
-        elif c == ">":
-            in_tag = False
-            out.append(Tag(buffer))
-            buffer = ""
-        else:
-            buffer += c
-    if not in_tag and buffer:
-        out.append(Text(buffer))
-    return out
 
 
 if __name__ == "__main__":
