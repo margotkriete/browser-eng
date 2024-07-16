@@ -1,4 +1,4 @@
-This project is a Python implementation of the [Web Browser Engineering](http://browser.engineering) course. The program builds a basic, and so far incomplete, web browser.
+This project is a Python implementation of the [Web Browser Engineering](http://browser.engineering) course. The program builds a basic, and currently very incomplete, web browser.
 
 ### Requirements
 
