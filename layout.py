@@ -1,5 +1,6 @@
 import tkinter
 from constants import HSTEP, VSTEP, SCROLLBAR_WIDTH, WIDTH
+from font_cache import get_font
 
 
 class Text:
@@ -15,7 +16,8 @@ class Tag:
 class Layout:
     def token(self, tok):
         if isinstance(tok, Text):
-            self.handle_text(tok)
+            for word in tok.text.split():
+                self.word(word)
         else:
             match tok.tag:
                 case "i":
@@ -34,25 +36,48 @@ class Layout:
                     self.size += 4
                 case "/big":
                     self.size -= 4
+                case "br":
+                    self.flush()
+                case "/p":
+                    self.flush()
+                    self.cursor_y += VSTEP
 
-    def handle_text(self, token):
-        for word in token.text.split():
-            font = tkinter.font.Font(
-                size=self.size, weight=self.weight, slant=self.style
-            )
-            w = font.measure(word)
+    def word(self, word):
+        font = get_font(self.size, self.weight, self.style)
+        w = font.measure(word)
 
-            # Wrap text once we reach the edge of the screen
-            if self.cursor_x + w >= self.width - HSTEP - SCROLLBAR_WIDTH:
-                self.cursor_y += font.metrics("linespace") * 1.25
-                self.cursor_x = HSTEP
+        # Wrap text once we reach the edge of the screen
+        if self.cursor_x + w > self.width - HSTEP - SCROLLBAR_WIDTH:
+            self.flush()
 
-            self.display_list.append((self.cursor_x, self.cursor_y, word, font))
-            self.cursor_x += w + font.measure(" ")
-            # Increase cursor_y if the character is a newline
-            if word == "\n":
-                self.cursor_y += VSTEP
-                self.cursor_x = HSTEP
+        self.line.append((self.cursor_x, word, font))
+        self.cursor_x += w + font.measure(" ")
+
+        # Increase cursor_y if the character is a newline
+        if word == "\n":
+            self.cursor_y += VSTEP
+            self.cursor_x = HSTEP
+
+    def flush(self):
+        if not self.line:
+            return
+
+        # Align words along the baseline
+        metrics = [font.metrics() for _, _, font in self.line]
+        max_ascent = max([metric["ascent"] for metric in metrics])
+        baseline = self.cursor_y + 1.25 * max_ascent
+
+        # Add words to display_list
+        for x, word, font in self.line:
+            y = baseline - font.metrics("ascent")
+            self.display_list.append((x, y, word, font))
+
+        # Update cursor_x and cursor_y
+        # cursor_y moves below baseline to account for deepest character
+        max_descent = max([metric["descent"] for metric in metrics])
+        self.cursor_y = baseline + 1.25 * max_descent
+        self.cursor_x = HSTEP
+        self.line = []
 
     def __init__(
         self, tokens: "list[str]", width: int = WIDTH, rtl: bool = False
@@ -63,12 +88,17 @@ class Layout:
         self.cursor_x, self.cursor_y = HSTEP, VSTEP
         self.weight, self.style = "normal", "roman"
         self.display_list = []
+
+        # self.line is a buffer of x positions, computed in the
+        # first pass of text
+        self.line = []
         self.width = width
         self.size = 12
-        self.bi_times = tkinter.font.Font(family="Times", size=16)
 
         for tok in tokens:
             self.token(tok)
+
+        self.flush()
 
 
 def lex(body: str) -> "list[str]":
