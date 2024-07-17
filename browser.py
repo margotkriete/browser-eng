@@ -68,7 +68,7 @@ class Browser:
                     x0, y0, x1, y1, fill="blue", tags="scrollbar"
                 )
 
-    def draw(self, font=None) -> None:
+    def draw(self, font=None):
         self.canvas.delete("text")
         for x, y, c, font in self.display_list:
             if y > self.scroll + self.screen_height:

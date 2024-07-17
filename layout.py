@@ -67,9 +67,14 @@ class Layout:
         max_ascent = max([metric["ascent"] for metric in metrics])
         baseline = self.cursor_y + 1.25 * max_ascent
 
+        if self.rtl:
+            offset = self.width - (HSTEP * 2) - self.cursor_x
+
         # Add words to display_list
         for x, word, font in self.line:
             y = baseline - font.metrics("ascent")
+            if self.rtl:
+                x += offset
             self.display_list.append((x, y, word, font))
 
         # Update cursor_x and cursor_y
@@ -79,12 +84,8 @@ class Layout:
         self.cursor_x = HSTEP
         self.line = []
 
-    def __init__(
-        self, tokens: "list[str]", width: int = WIDTH, rtl: bool = False
-    ) -> "list[tuple[int, int, str]]":
-        # if rtl:
-        # return layout_rtl(tokens, width)
-
+    def __init__(self, tokens, width: int = WIDTH, rtl: bool = False):
+        self.rtl = rtl
         self.cursor_x, self.cursor_y = HSTEP, VSTEP
         self.weight, self.style = "normal", "roman"
         self.display_list = []
@@ -101,7 +102,7 @@ class Layout:
         self.flush()
 
 
-def lex(body: str) -> "list[str]":
+def lex(body: str) -> list:
     buffer = ""
     out = []
     in_tag = False
@@ -120,37 +121,3 @@ def lex(body: str) -> "list[str]":
     if not in_tag and buffer:
         out.append(Text(buffer))
     return out
-
-
-# Exercise 2.7
-# TODO: fix after working through Chapter 3
-def layout_rtl(text: str, width: int = WIDTH):
-    cursor_x = width - HSTEP
-    cursor_y = VSTEP
-    display_list = []
-    font = tkinter.font.Font(family="Times", size=16)
-
-    # Keep track of current line in list, and when you reach
-    # a new line, append existing list to display_list, but lay out in reverse
-    line = []
-    for c in text:
-        # If cursor_x is still within the same line, keep
-        # adding to line array
-        if cursor_x >= HSTEP and c != "\n":
-            line.append(c)
-            cursor_x -= HSTEP
-        else:
-            # If cursor_x is now at the end of the line, lay out line list,
-            # starting from the rightmost edge
-            cursor_x = width - HSTEP
-            line.reverse()
-            for l in line:
-                display_list.append((cursor_x, cursor_y, l, font))
-                cursor_x -= HSTEP
-            cursor_y += VSTEP
-
-            # Reset cursor_x so the next iteration begins a new line
-            cursor_x = width - HSTEP
-            line = []
-
-    return display_list
