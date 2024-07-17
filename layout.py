@@ -1,5 +1,4 @@
-import tkinter
-from constants import HSTEP, VSTEP, SCROLLBAR_WIDTH, WIDTH
+from constants import HSTEP, SCROLLBAR_WIDTH, VSTEP, WIDTH
 from font_cache import get_font
 
 

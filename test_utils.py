@@ -1,6 +1,6 @@
-from unittest import mock
 import io
 import tkinter.font
+from unittest import mock
 
 
 class socket:

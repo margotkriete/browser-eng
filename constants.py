@@ -4,3 +4,4 @@ WIDTH, HEIGHT = 800, 600
 SCROLL_STEP = 100
 TEST_FILE = "/Users/margotkriete/Desktop/test.txt"
 SCROLLBAR_WIDTH = 20
+PORTS = {"http": 80, "https": 443}

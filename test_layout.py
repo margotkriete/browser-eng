@@ -1,6 +1,6 @@
-from layout import Layout, Text, Tag
 import test_utils
 from constants import HSTEP
+from layout import Layout, Text
 
 
 class TestLayout:

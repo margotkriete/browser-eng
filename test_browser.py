@@ -1,6 +1,6 @@
 from browser import Browser
-from url import URL
 from test_utils import socket
+from url import URL
 
 
 class TestBrowser:
