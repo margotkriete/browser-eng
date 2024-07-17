@@ -1,3 +1,4 @@
+import test_utils
 from browser import Browser
 from test_utils import socket
 from url import URL

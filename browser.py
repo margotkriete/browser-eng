@@ -25,9 +25,6 @@ class Browser:
         self.screen_width = WIDTH
         self.rtl = rtl
 
-        # Size unit is "points," which are 72nds of an inch, not pixels
-        self.bi_times = tkinter.font.Font(family="Times", size=16)
-
     def _get_page_height(self):
         return self.display_list[len(self.display_list) - 1][1]
 

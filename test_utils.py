@@ -149,3 +149,20 @@ class TkLabel:
 
 
 tkinter.Label = TkLabel
+
+
+class SilentCanvas:
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def create_text(self, x, y, text, **kwargs):
+        pass
+
+    def pack(self, **kwargs):
+        pass
+
+    def delete(self, v):
+        pass
+
+
+tkinter.Canvas = SilentCanvas
