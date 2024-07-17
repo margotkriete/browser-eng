@@ -51,12 +51,15 @@ class Layout:
             self.flush()
 
         self.line.append((self.cursor_x, word, font))
-        self.cursor_x += w + font.measure(" ")
+        if self.rtl:
+            self.cursor_x -= w + font.measure(" ")
+        else:
+            self.cursor_x += w + font.measure(" ")
 
-        # Increase cursor_y if the character is a newline
-        if word == "\n":
-            self.cursor_y += VSTEP
-            self.cursor_x = HSTEP
+        # # Increase cursor_y if the character is a newline
+        # if word == "\n":
+        #     self.cursor_y += VSTEP
+        #     self.cursor_x = HSTEP
 
     def flush(self):
         if not self.line:
@@ -76,16 +79,17 @@ class Layout:
         # cursor_y moves below baseline to account for deepest character
         max_descent = max([metric["descent"] for metric in metrics])
         self.cursor_y = baseline + 1.25 * max_descent
-        self.cursor_x = HSTEP
+        if self.rtl:
+            self.cursor_x = self.width - HSTEP
+        else:
+            self.cursor_x = HSTEP
         self.line = []
 
-    def __init__(
-        self, tokens: "list[str]", width: int = WIDTH, rtl: bool = False
-    ) -> "list[tuple[int, int, str]]":
-        # if rtl:
-        # return layout_rtl(tokens, width)
-
+    def __init__(self, tokens: "list[str]", width: int = WIDTH, rtl: bool = False):
+        self.rtl = rtl
         self.cursor_x, self.cursor_y = HSTEP, VSTEP
+        if self.rtl:
+            self.cursor_x = width - HSTEP
         self.weight, self.style = "normal", "roman"
         self.display_list = []
 
@@ -99,6 +103,35 @@ class Layout:
             self.token(tok)
 
         self.flush()
+
+    # Exercise 2.7
+    def layout_rtl(self, text: str, width: int = WIDTH):
+        cursor_x = width - HSTEP
+        cursor_y = VSTEP
+        font = tkinter.font.Font(family="Times", size=16)
+
+        # Keep track of current line in list, and when you reach
+        # a new line, append existing list to display_list, but lay out in reverse
+        line = []
+        for c in text:
+            # If cursor_x is still within the same line, keep
+            # adding to line array
+            if cursor_x >= HSTEP and c != "\n":
+                line.append(c)
+                cursor_x -= HSTEP
+            else:
+                # If cursor_x is now at the end of the line, lay out line list,
+                # starting from the rightmost edge
+                cursor_x = width - HSTEP
+                line.reverse()
+                for l in line:
+                    self.display_list.append((cursor_x, cursor_y, l, font))
+                    cursor_x -= HSTEP
+                cursor_y += VSTEP
+
+                # Reset cursor_x so the next iteration begins a new line
+                cursor_x = width - HSTEP
+                line = []
 
 
 def lex(body: str) -> "list[str]":
@@ -120,37 +153,3 @@ def lex(body: str) -> "list[str]":
     if not in_tag and buffer:
         out.append(Text(buffer))
     return out
-
-
-# Exercise 2.7
-# TODO: fix after working through Chapter 3
-def layout_rtl(text: str, width: int = WIDTH):
-    cursor_x = width - HSTEP
-    cursor_y = VSTEP
-    display_list = []
-    font = tkinter.font.Font(family="Times", size=16)
-
-    # Keep track of current line in list, and when you reach
-    # a new line, append existing list to display_list, but lay out in reverse
-    line = []
-    for c in text:
-        # If cursor_x is still within the same line, keep
-        # adding to line array
-        if cursor_x >= HSTEP and c != "\n":
-            line.append(c)
-            cursor_x -= HSTEP
-        else:
-            # If cursor_x is now at the end of the line, lay out line list,
-            # starting from the rightmost edge
-            cursor_x = width - HSTEP
-            line.reverse()
-            for l in line:
-                display_list.append((cursor_x, cursor_y, l, font))
-                cursor_x -= HSTEP
-            cursor_y += VSTEP
-
-            # Reset cursor_x so the next iteration begins a new line
-            cursor_x = width - HSTEP
-            line = []
-
-    return display_list
