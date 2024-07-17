@@ -28,7 +28,7 @@ class Browser:
     def _get_page_height(self):
         return self.display_list[len(self.display_list) - 1][1]
 
-    def load(self, url: str) -> None:
+    def load(self, url: URL) -> None:
         body = url.request()
         self.text = lex(body)
         self.display_list = Layout(self.text, rtl=self.rtl).display_list
@@ -36,15 +36,14 @@ class Browser:
         self.draw()
 
     # Exercise 2.4
-    def get_scrollbar_coordinates(self):
+    def get_scrollbar_coordinates(self) -> tuple[int, int, int, int]:
         page_height = self._get_page_height()
         scrollbar_height = (self.screen_height / page_height) * self.screen_height
-        if self.display_list:
-            x0 = self.screen_width - SCROLLBAR_WIDTH
-            y0 = (self.scroll / page_height) * self.screen_height
-            x1 = self.screen_width
-            y1 = y0 + scrollbar_height
-            return x0, y0, x1, y1
+        x0 = self.screen_width - SCROLLBAR_WIDTH
+        y0 = (self.scroll / page_height) * self.screen_height
+        x1 = self.screen_width
+        y1 = y0 + scrollbar_height
+        return x0, y0, x1, y1
 
     # Exercise 2.4
     def draw_scrollbar(self) -> None:

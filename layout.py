@@ -1,5 +1,7 @@
 from constants import HSTEP, SCROLLBAR_WIDTH, VSTEP, WIDTH
 from font_cache import get_font
+from tkinter import font
+import tkinter
 
 
 class Text:
@@ -13,7 +15,11 @@ class Tag:
 
 
 class Layout:
-    def token(self, tok):
+    cursor_y: int
+    cursor_x: int
+    line: list
+
+    def token(self, tok: Text | Tag) -> None:
         if isinstance(tok, Text):
             for word in tok.text.split():
                 self.word(word)
@@ -41,7 +47,7 @@ class Layout:
                     self.flush()
                     self.cursor_y += VSTEP
 
-    def word(self, word):
+    def word(self, word) -> None:
         font = get_font(self.size, self.weight, self.style)
         w = font.measure(word)
 
@@ -57,7 +63,7 @@ class Layout:
             self.cursor_y += VSTEP
             self.cursor_x = HSTEP
 
-    def flush(self):
+    def flush(self) -> None:
         if not self.line:
             return
 
@@ -83,17 +89,17 @@ class Layout:
         self.cursor_x = HSTEP
         self.line = []
 
-    def __init__(self, tokens, width: int = WIDTH, rtl: bool = False):
-        self.rtl = rtl
+    def __init__(self, tokens, width: int = WIDTH, rtl: bool = False) -> None:
+        self.rtl: bool = rtl
         self.cursor_x, self.cursor_y = HSTEP, VSTEP
         self.weight, self.style = "normal", "roman"
-        self.display_list = []
+        self.display_list: list[tuple] = []
 
         # self.line is a buffer of x positions, computed in the
         # first pass of text
         self.line = []
-        self.width = width
-        self.size = 12
+        self.width: int = width
+        self.size: int = 12
 
         for tok in tokens:
             self.token(tok)
@@ -101,9 +107,9 @@ class Layout:
         self.flush()
 
 
-def lex(body: str) -> list:
+def lex(body: str) -> list[Tag | Text]:
     buffer = ""
-    out = []
+    out: list[Tag | Text] = []
     in_tag = False
     for c in body:
         if c == "<":

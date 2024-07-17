@@ -3,7 +3,7 @@ import tkinter
 FONTS = {}
 
 
-def get_font(size, weight, style):
+def get_font(size, weight, style) -> tkinter.font.Font:
     key = (size, weight, style)
     if key not in FONTS:
         font = tkinter.font.Font(size=size, weight=weight, slant=style)
