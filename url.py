@@ -1,8 +1,7 @@
 import socket
 import ssl
 
-
-PORTS = {"http": 80, "https": 443}
+from constants import PORTS
 
 
 class URL:

@@ -1,14 +1,8 @@
 import argparse
 import tkinter
 import tkinter.font
-from constants import (
-    WIDTH,
-    HEIGHT,
-    VSTEP,
-    SCROLLBAR_WIDTH,
-    SCROLL_STEP,
-    TEST_FILE,
-)
+
+from constants import HEIGHT, SCROLL_STEP, SCROLLBAR_WIDTH, TEST_FILE, VSTEP, WIDTH
 from layout import Layout, lex
 from url import URL
 
