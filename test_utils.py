@@ -1,5 +1,6 @@
 from unittest import mock
 import io
+import tkinter.font
 
 
 class socket:
@@ -111,3 +112,40 @@ class ssl:
 class SilentTk:
     def bind(self, event, callback):
         pass
+
+
+class TkFont:
+    def __init__(self, size=None, weight=None, slant=None, style=None):
+        self.size = size
+        self.weight = weight
+        self.slant = slant
+        self.style = style
+
+    def measure(self, word):
+        return self.size * len(word)
+
+    def metrics(self, name=None):
+        all = {
+            "ascent": self.size * 0.75,
+            "descent": self.size * 0.25,
+            "linespace": self.size,
+        }
+        if name:
+            return all[name]
+        return all
+
+    def __repr__(self):
+        return "Font size={} weight={} slant={} style={}".format(
+            self.size, self.weight, self.slant, self.style
+        )
+
+
+tkinter.font.Font = TkFont
+
+
+class TkLabel:
+    def __init__(self, font):
+        pass
+
+
+tkinter.Label = TkLabel
