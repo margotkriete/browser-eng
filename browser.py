@@ -4,14 +4,12 @@ import tkinter.font
 from constants import (
     WIDTH,
     HEIGHT,
-    HSTEP,
     VSTEP,
     SCROLLBAR_WIDTH,
     SCROLL_STEP,
     TEST_FILE,
 )
 from layout import Layout, lex
-from tkinter import ttk
 from url import URL
 
 
@@ -73,8 +71,6 @@ class Browser:
     def draw(self, font=None) -> None:
         self.canvas.delete("text")
         for x, y, c, font in self.display_list:
-            if not font:
-                font = self.bi_times
             if y > self.scroll + self.screen_height:
                 continue
             if y + VSTEP < self.scroll:
