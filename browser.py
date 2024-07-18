@@ -25,8 +25,8 @@ class Browser:
         self.screen_width = WIDTH
         self.rtl = rtl
 
-    def _get_page_height(self):
-        return self.display_list[len(self.display_list) - 1][1]
+    def _get_page_height(self) -> int:
+        return self.display_list[-1][1]
 
     def load(self, url: URL) -> None:
         body = url.request()
@@ -38,25 +38,25 @@ class Browser:
     # Exercise 2.4
     def get_scrollbar_coordinates(self) -> tuple[int, int, int, int]:
         page_height = self._get_page_height()
-        scrollbar_height = (self.screen_height / page_height) * self.screen_height
+        scrollbar_height = int((self.screen_height / page_height) * self.screen_height)
         x0 = self.screen_width - SCROLLBAR_WIDTH
-        y0 = (self.scroll / page_height) * self.screen_height
+        y0 = int((self.scroll / page_height) * self.screen_height)
         x1 = self.screen_width
         y1 = y0 + scrollbar_height
         return x0, y0, x1, y1
 
     # Exercise 2.4
     def draw_scrollbar(self) -> None:
-        if self.display_list:
-            if self._get_page_height() < self.screen_height:
-                return
-            x0, y0, x1, y1 = self.get_scrollbar_coordinates()
-            if self.canvas.gettags("scrollbar"):
-                self.canvas.coords("scrollbar", x0, y0, x1, y1)
-            else:
-                self.canvas.create_rectangle(
-                    x0, y0, x1, y1, fill="blue", tags="scrollbar"
-                )
+        if not self.display_list:
+            return
+        if self._get_page_height() <= self.screen_height:
+            self.canvas.delete("scrollbar")
+            return
+        x0, y0, x1, y1 = self.get_scrollbar_coordinates()
+        if self.canvas.gettags("scrollbar"):
+            self.canvas.coords("scrollbar", x0, y0, x1, y1)
+        else:
+            self.canvas.create_rectangle(x0, y0, x1, y1, fill="blue", tags="scrollbar")
 
     def draw(self, font=None):
         self.canvas.delete("text")
@@ -69,7 +69,7 @@ class Browser:
                 x, y - self.scroll, text=c, font=font, anchor="nw", tag="text"
             )
 
-    def scrolldown(self, e):
+    def scrolldown(self, e) -> None:
         if not self.display_list:
             return
         if self.scroll + self.screen_height < self._get_page_height():
@@ -77,14 +77,14 @@ class Browser:
             self.draw()
             self.draw_scrollbar()
 
-    def scrollup(self, e):
+    def scrollup(self, e) -> None:
         if self.scroll >= SCROLL_STEP:
             self.scroll -= SCROLL_STEP
         self.draw()
         self.draw_scrollbar()
 
     # Exercise 2.2
-    def mousescroll(self, e):
+    def mousescroll(self, e) -> None:
         updated_scroll = self.scroll - e.delta + self.screen_height
         if (updated_scroll < self._get_page_height()) and (self.scroll - e.delta > 0):
             self.scroll -= e.delta
@@ -92,7 +92,9 @@ class Browser:
             self.draw_scrollbar()
 
     # Exercise 2.3
-    def resize(self, e):
+    def resize(self, e: tkinter.Event) -> None:
+        # if e.height == self.screen_height and e.width == self.screen_width:
+        # return
         self.screen_height = e.height
         self.screen_width = e.width
         self.display_list = Layout(self.text, self.screen_width, self.rtl).display_list
