@@ -16,3 +16,10 @@ class DisplayListItem:
     y: int
     text: str
     font: tkinter.font.Font
+
+
+@dataclass
+class LineItem:
+    x: int
+    text: str
+    font: tkinter.font.Font

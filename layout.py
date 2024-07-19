@@ -3,7 +3,7 @@ from font_cache import get_font
 from tkinter import font
 import tkinter
 
-from typedclasses import DisplayListItem
+from typedclasses import DisplayListItem, LineItem
 
 
 class Text:
@@ -48,6 +48,8 @@ class Layout:
                 case "/p":
                     self.flush()
                     self.cursor_y += VSTEP
+                case 'h1 class="title"':
+                    print("found h1 tag")
 
     def word(self, word) -> None:
         font = get_font(self.size, self.weight, self.style)
@@ -57,7 +59,7 @@ class Layout:
         if self.cursor_x + w > self.width - HSTEP - SCROLLBAR_WIDTH:
             self.flush()
 
-        self.line.append((self.cursor_x, word, font))
+        self.line.append(LineItem(x=self.cursor_x, text=word, font=font))
         self.cursor_x += w + font.measure(" ")
 
         # Increase cursor_y if the character is a newline
@@ -66,11 +68,12 @@ class Layout:
             self.cursor_x = HSTEP
 
     def flush(self) -> None:
+        # self.line is a buffer of x positions, computed in the first pass of text
         if not self.line:
             return
 
         # Align words along the baseline
-        metrics = [font.metrics() for _, _, font in self.line]
+        metrics = [item.font.metrics() for item in self.line]
         max_ascent = max([metric["ascent"] for metric in metrics])
         baseline = self.cursor_y + 1.25 * max_ascent
 
@@ -78,11 +81,11 @@ class Layout:
             offset = self.width - (HSTEP * 2) - self.cursor_x
 
         # Add words to display_list
-        for x, word, font in self.line:
-            y = baseline - font.metrics("ascent")
+        for item in self.line:
+            y = baseline - item.font.metrics("ascent")
             if self.rtl:
-                x += offset
-            self.display_list.append(DisplayListItem(x, y, word, font))
+                item.x += offset
+            self.display_list.append(DisplayListItem(item.x, y, item.text, item.font))
 
         # Update cursor_x and cursor_y
         # cursor_y moves below baseline to account for deepest character
@@ -98,10 +101,7 @@ class Layout:
         self.cursor_x, self.cursor_y = HSTEP, VSTEP
         self.weight, self.style = "normal", "roman"
         self.display_list: list[DisplayListItem] = []
-
-        # self.line is a buffer of x positions, computed in the
-        # first pass of text
-        self.line = []
+        self.line: list[LineItem] = []
         self.width: int = width
         self.size: int = 12
 
