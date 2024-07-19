@@ -49,7 +49,9 @@ class Layout:
                     self.flush()
                     self.cursor_y += VSTEP
                 case 'h1 class="title"':
-                    print("found h1 tag")
+                    self.parent_tag = tok.tag
+                case "/h1":
+                    self.parent_tag = None
 
     def word(self, word) -> None:
         font = get_font(self.size, self.weight, self.style)
@@ -76,15 +78,19 @@ class Layout:
         metrics = [item.font.metrics() for item in self.line]
         max_ascent = max([metric["ascent"] for metric in metrics])
         baseline = self.cursor_y + 1.25 * max_ascent
+        offset: int = 0
 
         if self.rtl:
             offset = self.width - (HSTEP * 2) - self.cursor_x
 
+        if self.parent_tag == 'h1 class="title"':
+            offset = int((self.width - self.line[-1].x) / 2)
+
+        print("self.line", self.line)
         # Add words to display_list
         for item in self.line:
             y = baseline - item.font.metrics("ascent")
-            if self.rtl:
-                item.x += offset
+            item.x += offset
             self.display_list.append(DisplayListItem(item.x, y, item.text, item.font))
 
         # Update cursor_x and cursor_y
@@ -104,6 +110,7 @@ class Layout:
         self.line: list[LineItem] = []
         self.width: int = width
         self.size: int = 12
+        self.alignment = "none"
 
         for tok in tokens:
             self.token(tok)
