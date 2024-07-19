@@ -27,7 +27,7 @@ class TestURL:
         assert url.scheme == "file"
 
     def test_request_http(self):
-        _ = socket.patch().start()
+        socket.patch().start()
         url = "http://test.test/example1"
         socket.respond(
             url, b"HTTP/1.0 200 OK\r\n" + b"Header1: Value1\r\n\r\n" + b"Body text"
@@ -36,8 +36,8 @@ class TestURL:
         assert body == "Body text"
 
     def test_request_https(self):
-        _ = socket.patch().start()
-        _ = ssl.patch().start()
+        socket.patch().start()
+        ssl.patch().start()
         url = "https://test.test/example1"
         socket.respond(
             url, b"HTTP/1.0 200 OK\r\n" + b"Header1: Value1\r\n\r\n" + b"Body text"
@@ -50,3 +50,10 @@ class TestURL:
             url = "file://test.txt"
             body = URL(url).request()
             assert body == "testdata"
+
+    def test_malformed_url_returns_about_blank(self):
+        socket.patch().start()
+        ssl.patch().start()
+        url = "about:blank"
+        body = URL(url).request()
+        assert body is None

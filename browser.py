@@ -31,6 +31,8 @@ class Browser:
 
     def load(self, url: URL) -> None:
         body = url.request()
+        if not body:
+            return
         self.text = lex(body)
         self.display_list = Layout(self.text, rtl=self.rtl).display_list
         self.draw_scrollbar()
@@ -112,8 +114,8 @@ class Browser:
 
     # Exercise 2.3
     def resize(self, e: tkinter.Event) -> None:
-        # if e.height == self.screen_height and e.width == self.screen_width:
-        # return
+        if not hasattr(self, "text"):
+            return
         self.screen_height = e.height
         self.screen_width = e.width
         self.display_list = Layout(self.text, self.screen_width, self.rtl).display_list
