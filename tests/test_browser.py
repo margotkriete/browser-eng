@@ -25,16 +25,16 @@ class TestBrowser:
         assert len(browser.display_list) == 2
         first_word = browser.display_list[0]
         second_word = browser.display_list[1]
-        assert first_word[2] == "Body"
-        assert second_word[2] == "text"
+        assert first_word.text == "Body"
+        assert second_word.text == "text"
 
         # "Body" should have a smaller x coordinate than "text"
         # First word should begin at HSTEP
-        assert first_word[0] < second_word[0]
-        assert first_word[0] == HSTEP
+        assert first_word.x < second_word.x
+        assert first_word.x == HSTEP
 
         # Words should have the same y coordinate
-        assert first_word[1] == second_word[1]
+        assert first_word.y == second_word.y
 
     def test_browser_load_rtl(self):
         _ = socket.patch().start()
@@ -45,17 +45,17 @@ class TestBrowser:
         assert len(browser.display_list) == 2
         first_word = browser.display_list[0]
         second_word = browser.display_list[1]
-        assert first_word[2] == "Body"
-        assert second_word[2] == "text"
+        assert first_word.text == "Body"
+        assert second_word.text == "text"
 
         # "Body" should have a smaller x coordinate than "text"
-        assert first_word[0] < second_word[0]
+        assert first_word.x < second_word.x
         # Words should have the same y coordinate
-        assert first_word[1] == second_word[1]
+        assert first_word.y == second_word.y
 
         # Using rtl layout, first x coordinate should be > HSTEP if line does not
         # span entire width
-        assert first_word[0] > HSTEP
+        assert first_word.x > HSTEP
 
     def test_browser_resize_width(self):
         _ = socket.patch().start()
@@ -73,8 +73,8 @@ class TestBrowser:
         assert browser.screen_width == e.width
 
         # All x coordinates should be > HSTEP and < screen width
-        assert all(item[0] < browser.screen_width for item in browser.display_list)
-        assert all(item[0] >= HSTEP for item in browser.display_list)
+        assert all(item.x < browser.screen_width for item in browser.display_list)
+        assert all(item.x >= HSTEP for item in browser.display_list)
 
     def test_browser_resize_height(self):
         _ = socket.patch().start()
@@ -83,7 +83,7 @@ class TestBrowser:
         browser.load(URL(self.mock_url()))
 
         assert browser.screen_height == HEIGHT
-        previous_doc_height = browser.display_list[-1][1]
+        previous_doc_height = browser.display_list[-1].y
         e = tkinter.Event()
         e.height = 400
         e.width = 600
@@ -92,7 +92,7 @@ class TestBrowser:
         assert browser.screen_height == e.height
         # display_list coordinates should have shifted with resize
         # display_list[-1][1] is the last y coordinate of the document
-        assert browser.display_list[-1][1] != previous_doc_height
+        assert browser.display_list[-1].y != previous_doc_height
 
     def test_browser_scrollbar_align_after_resize(self):
         _ = socket.patch().start()
