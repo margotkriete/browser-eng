@@ -4,6 +4,7 @@ import tkinter.font
 
 from constants import HEIGHT, SCROLL_STEP, SCROLLBAR_WIDTH, TEST_FILE, VSTEP, WIDTH
 from layout import Layout, lex
+from typedclasses import ScrollbarCoordinate
 from url import URL
 
 
@@ -26,7 +27,7 @@ class Browser:
         self.rtl = rtl
 
     def _get_page_height(self) -> int:
-        return self.display_list[-1][1]
+        return self.display_list[-1].y
 
     def load(self, url: URL) -> None:
         body = url.request()
@@ -36,14 +37,14 @@ class Browser:
         self.draw()
 
     # Exercise 2.4
-    def get_scrollbar_coordinates(self) -> tuple[int, int, int, int]:
+    def get_scrollbar_coordinates(self) -> ScrollbarCoordinate:
         page_height = self._get_page_height()
         scrollbar_height = int((self.screen_height / page_height) * self.screen_height)
         x0 = self.screen_width - SCROLLBAR_WIDTH
         y0 = int((self.scroll / page_height) * self.screen_height)
         x1 = self.screen_width
         y1 = y0 + scrollbar_height
-        return x0, y0, x1, y1
+        return ScrollbarCoordinate(x0, y0, x1, y1)
 
     # Exercise 2.4
     def draw_scrollbar(self) -> None:
@@ -52,21 +53,39 @@ class Browser:
         if self._get_page_height() <= self.screen_height:
             self.canvas.delete("scrollbar")
             return
-        x0, y0, x1, y1 = self.get_scrollbar_coordinates()
+        coords = self.get_scrollbar_coordinates()
         if self.canvas.gettags("scrollbar"):
-            self.canvas.coords("scrollbar", x0, y0, x1, y1)
+            self.canvas.coords(
+                "scrollbar",
+                coords.x0,
+                coords.y0,
+                coords.x1,
+                coords.y1,
+            )
         else:
-            self.canvas.create_rectangle(x0, y0, x1, y1, fill="blue", tags="scrollbar")
+            self.canvas.create_rectangle(
+                coords.x0,
+                coords.y0,
+                coords.x1,
+                coords.y1,
+                fill="blue",
+                tags="scrollbar",
+            )
 
     def draw(self, font=None):
         self.canvas.delete("text")
-        for x, y, c, font in self.display_list:
-            if y > self.scroll + self.screen_height:
+        for item in self.display_list:
+            if item.y > self.scroll + self.screen_height:
                 continue
-            if y + VSTEP < self.scroll:
+            if item.y + VSTEP < self.scroll:
                 continue
             self.canvas.create_text(
-                x, y - self.scroll, text=c, font=font, anchor="nw", tag="text"
+                item.x,
+                item.y - self.scroll,
+                text=item.text,
+                font=item.font,
+                anchor="nw",
+                tag="text",
             )
 
     def scrolldown(self, e) -> None:

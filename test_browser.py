@@ -1,10 +1,10 @@
-import test_utils
-from browser import Browser
-from test_utils import socket
-from url import URL
-from constants import HSTEP, HEIGHT, WIDTH
 import tkinter
 
+import test_utils
+from browser import Browser
+from constants import HEIGHT, HSTEP, WIDTH
+from test_utils import socket
+from url import URL
 
 LOREM_IPSUM = b" Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas tellus metus, luctus id quam at, ornare posuere sapien. Morbi sit amet sollicitudin nunc. Donec luctus nibh ultricies lacus luctus, eget porta orci facilisis. Sed placerat et mauris dignissim porta. Donec sagittis enim dolor, eget dapibus augue semper vel. Proin pellentesque, arcu a tincidunt eleifend, nulla libero porta risus, eget euismod ante quam eget erat. Phasellus hendrerit tortor condimentum ante rhoncus bibendum. Donec vehicula eleifend libero ac vulputate. Sed elementum, sem eu convallis dictum, risus libero blandit purus, sed convallis justo orci non est. Sed efficitur malesuada neque, pulvinar feugiat nulla suscipit vel. Donec augue leo, gravida non feugiat in, gravida a ipsum. Cras dictum purus mauris, id sodales nulla varius a. Phasellus lobortis volutpat volutpat. Phasellus cursus quam quis odio feugiat, a consequat ipsum pharetra. \nMauris in nisi et libero sodales elementum id in ante. Morbi vel blandit risus. Curabitur at lacinia nunc. Suspendisse arcu nulla, elementum id egestas eget, commodo laoreet massa. Aenean tristique, lacus in porta placerat, odio purus consectetur lectus, sed vestibulum ligula augue a est. Aenean varius ante quis bibendum semper. Morbi elit arcu, condimentum id bibendum ac, congue nec risus. Fusce semper erat sed viverra congue. Aenean volutpat risus non elit aliquet hendrerit."
 
@@ -103,4 +103,8 @@ class TestBrowser:
         e.height = 400
         e.width = 1200
         browser.resize(e)
-        assert browser.get_scrollbar_coordinates() == (1180, 0, 1200, 652)
+        coordinates = browser.get_scrollbar_coordinates()
+        assert coordinates.x0 == 1180
+        assert coordinates.y0 == 0
+        assert coordinates.x1 == 1200
+        assert coordinates.y1 == 652

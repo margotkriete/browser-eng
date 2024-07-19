@@ -3,6 +3,8 @@ from font_cache import get_font
 from tkinter import font
 import tkinter
 
+from typedclasses import DisplayListItem
+
 
 class Text:
     def __init__(self, text):
@@ -80,7 +82,7 @@ class Layout:
             y = baseline - font.metrics("ascent")
             if self.rtl:
                 x += offset
-            self.display_list.append((x, y, word, font))
+            self.display_list.append(DisplayListItem(x, y, word, font))
 
         # Update cursor_x and cursor_y
         # cursor_y moves below baseline to account for deepest character
@@ -93,7 +95,7 @@ class Layout:
         self.rtl: bool = rtl
         self.cursor_x, self.cursor_y = HSTEP, VSTEP
         self.weight, self.style = "normal", "roman"
-        self.display_list: list[tuple] = []
+        self.display_list: list[DisplayListItem] = []
 
         # self.line is a buffer of x positions, computed in the
         # first pass of text
