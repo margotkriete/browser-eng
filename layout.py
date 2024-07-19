@@ -3,17 +3,7 @@ from font_cache import get_font
 from tkinter import font
 import tkinter
 
-from typedclasses import DisplayListItem, LineItem
-
-
-class Text:
-    def __init__(self, text: str):
-        self.text = text
-
-
-class Tag:
-    def __init__(self, tag: str):
-        self.tag = tag
+from typedclasses import DisplayListItem, LineItem, Tag, Text
 
 
 class Layout:
@@ -48,7 +38,9 @@ class Layout:
                 case "/p":
                     self.flush()
                     self.cursor_y += VSTEP
-                case 'h1 class="title"':
+                case (
+                    'h1 class="title"'
+                ):  # TODO: make this less brittle; encompass tag types in an enum?
                     self.parent_tag = tok.tag
                 case "/h1":
                     self.parent_tag = None
@@ -61,7 +53,9 @@ class Layout:
         if self.cursor_x + w > self.width - HSTEP - SCROLLBAR_WIDTH:
             self.flush()
 
-        self.line.append(LineItem(x=self.cursor_x, text=word, font=font))
+        self.line.append(
+            LineItem(x=self.cursor_x, text=word, font=font, parent=self.parent_tag)
+        )
         self.cursor_x += w + font.measure(" ")
 
         # Increase cursor_y if the character is a newline
@@ -83,13 +77,11 @@ class Layout:
         if self.rtl:
             offset = self.width - (HSTEP * 2) - self.cursor_x
 
-        if self.parent_tag == 'h1 class="title"':
-            offset = int((self.width - self.line[-1].x) / 2)
-
-        print("self.line", self.line)
         # Add words to display_list
         for item in self.line:
             y = baseline - item.font.metrics("ascent")
+            if item.parent == 'h1 class="title"':
+                offset = int((self.width - self.line[-1].x) / 2)
             item.x += offset
             self.display_list.append(DisplayListItem(item.x, y, item.text, item.font))
 
@@ -110,7 +102,6 @@ class Layout:
         self.line: list[LineItem] = []
         self.width: int = width
         self.size: int = 12
-        self.alignment = "none"
 
         for tok in tokens:
             self.token(tok)
