@@ -7,12 +7,12 @@ from typedclasses import DisplayListItem
 
 
 class Text:
-    def __init__(self, text):
+    def __init__(self, text: str):
         self.text = text
 
 
 class Tag:
-    def __init__(self, tag):
+    def __init__(self, tag: str):
         self.tag = tag
 
 
@@ -91,7 +91,9 @@ class Layout:
         self.cursor_x = HSTEP
         self.line = []
 
-    def __init__(self, tokens, width: int = WIDTH, rtl: bool = False) -> None:
+    def __init__(
+        self, tokens: list[Tag | Text], width: int = WIDTH, rtl: bool = False
+    ) -> None:
         self.rtl: bool = rtl
         self.cursor_x, self.cursor_y = HSTEP, VSTEP
         self.weight, self.style = "normal", "roman"
