@@ -25,6 +25,7 @@ class Browser:
         self.screen_height = HEIGHT
         self.screen_width = WIDTH
         self.rtl = rtl
+        self.view_source = False
 
     def _get_page_height(self) -> int:
         return self.display_list[-1].y
@@ -33,12 +34,13 @@ class Browser:
         body = url.request()
         if not body:
             return
-        self.text = lex(body)
+        self.view_source = url.view_source
+        self.text = lex(body, view_source=url.view_source)
         self.display_list = Layout(
             tokens=self.text, width=self.screen_width, rtl=self.rtl
         ).display_list
-        self.draw_scrollbar()
         self.draw()
+        self.draw_scrollbar()
 
     # Exercise 2.4
     def get_scrollbar_coordinates(self) -> ScrollbarCoordinate:
@@ -76,7 +78,7 @@ class Browser:
                 tags="scrollbar",
             )
 
-    def draw(self, font=None):
+    def draw(self):
         self.canvas.delete("text")
         for item in self.display_list:
             if item.y > self.scroll + self.screen_height:

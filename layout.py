@@ -93,7 +93,10 @@ class Layout:
         self.line = []
 
     def __init__(
-        self, tokens: list[Tag | Text], width: int = WIDTH, rtl: bool = False
+        self,
+        tokens: list[Tag | Text],
+        width: int = WIDTH,
+        rtl: bool = False,
     ) -> None:
         self.rtl: bool = rtl
         self.cursor_x, self.cursor_y = HSTEP, VSTEP
@@ -110,7 +113,8 @@ class Layout:
         self.flush()
 
 
-def lex(body: str) -> list[Tag | Text]:
+# Convert raw response body to a list of parsed Tags and Text
+def lex(body: str, view_source: bool = False) -> list[Tag | Text]:
     buffer = ""
     out: list[Tag | Text] = []
     in_tag = False
@@ -120,6 +124,12 @@ def lex(body: str) -> list[Tag | Text]:
     if title:
         title_text = title.group(1)
     body = body.replace(title_text, "")
+    body = body.replace("&gt;", ">")
+    body = body.replace("&lt;", "<")
+
+    if view_source:
+        out.append(Text(body))
+        return out
 
     for c in body:
         if c == "<":
