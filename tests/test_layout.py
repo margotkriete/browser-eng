@@ -1,6 +1,7 @@
 import test_utils
-from constants import HSTEP, SCROLLBAR_WIDTH
-from layout import Layout, Text, Tag
+from constants import HSTEP
+from layout import Layout
+from parser import Text, Element
 
 
 class TestLayout:
@@ -21,10 +22,10 @@ class TestLayout:
 
     def test_h1_center_align(self):
         text = [
-            Tag('h1 class="title"'),
+            Element('h1 class="title"'),
             Text("Test1"),
             Text("test2"),
-            Tag("/h1"),
+            Element("/h1"),
             Text("test3"),
         ]
         layout = Layout(text)

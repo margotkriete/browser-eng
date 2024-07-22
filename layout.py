@@ -1,10 +1,10 @@
-import re
 import tkinter
 from enum import Enum
 
 from constants import Alignment, HSTEP, SCROLLBAR_WIDTH, VSTEP, WIDTH
 from font_cache import get_font
-from typedclasses import DisplayListItem, LineItem, Tag, Text
+from typedclasses import DisplayListItem, LineItem
+from parser import Text, Element
 
 
 def replace_character_references(s: str) -> str:
@@ -21,7 +21,7 @@ class Layout:
     abbr: bool
     in_pre: bool
 
-    def token(self, tok: Text | Tag) -> None:
+    def token(self, tok: Text | Element) -> None:
         if isinstance(tok, Text):
             if not self.in_pre:
                 for word in tok.text.split():
@@ -143,7 +143,7 @@ class Layout:
 
     def __init__(
         self,
-        tokens: list[Tag | Text],
+        tokens: list[Element | Text],
         width: int = WIDTH,
         rtl: bool = False,
     ) -> None:
@@ -163,38 +163,3 @@ class Layout:
             self.token(tok)
 
         self.flush()
-
-
-# Convert raw response body to a list of parsed Tags and Text
-def lex(body: str, view_source: bool = False) -> list[Tag | Text]:
-    buffer: str = ""
-    out: list[Tag | Text] = []
-    in_tag: bool = False
-
-    title = re.search("<title>(.*)</title>", body)
-    title_text = ""
-    if title:
-        title_text = title.group(1)
-    body = body.replace(title_text, "")
-
-    if view_source:
-        body = replace_character_references(body)
-        out.append(Text(body))
-        return out
-
-    for c in body:
-        if c == "<":
-            in_tag = True  # word is in between < >
-            if buffer:
-                out.append(Text(buffer))
-            buffer = ""
-        elif c == ">":
-            in_tag = False
-            out.append(Tag(buffer))
-            buffer = ""
-        else:
-            buffer += c
-    if not in_tag and buffer:
-        out.append(Text(buffer))
-
-    return out
