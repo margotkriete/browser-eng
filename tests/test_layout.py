@@ -35,3 +35,12 @@ class TestLayout:
         # Word 3 is outside of h1 tag so, should be right-aligned
         word3 = layout.display_list[2]
         assert word3.x == HSTEP
+
+    def test_abbr_tag(self):
+        text = [Tag("abbr"), Text("json"), Tag("/abbr")]
+        layout = Layout(text)
+        assert len(layout.display_list) == 1
+        word1 = layout.display_list[0]
+        assert word1.text == "JSON"
+        assert word1.font.size == 10
+        assert word1.font.weight == "bold"

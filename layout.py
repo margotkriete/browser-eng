@@ -12,6 +12,7 @@ class Layout:
     cursor_x: int
     line: list
     alignment: Enum
+    abbr: bool
 
     def token(self, tok: Text | Tag) -> None:
         if isinstance(tok, Text):
@@ -45,9 +46,19 @@ class Layout:
                 case "/h1":
                     self.flush()
                     self.alignment = Alignment.RIGHT
+                case "abbr":
+                    self.abbr = True
+                case "/abbr":
+                    self.abbr = False
 
-    def word(self, word) -> None:
-        font = get_font(self.size, self.weight, self.style)
+    def word(self, word: str) -> None:
+        if self.abbr:
+            for char in word:
+                if char.islower() and char.isalpha():
+                    font = get_font(self.size - 2, "bold", self.style)
+                    word = word.replace(char, char.upper())
+        else:
+            font = get_font(self.size, self.weight, self.style)
         w = font.measure(word)
 
         # Wrap text once we reach the edge of the screen
@@ -106,6 +117,7 @@ class Layout:
         self.width: int = width
         self.size: int = 12
         self.alignment: Enum = Alignment.RIGHT
+        self.abbr: bool = False
 
         for tok in tokens:
             self.token(tok)
