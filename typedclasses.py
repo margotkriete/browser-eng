@@ -33,4 +33,3 @@ class LineItem:
     x: int
     text: str
     font: tkinter.font.Font
-    parent: Tag

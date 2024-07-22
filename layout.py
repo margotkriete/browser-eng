@@ -1,10 +1,9 @@
-from constants import HSTEP, SCROLLBAR_WIDTH, VSTEP, WIDTH
-from font_cache import get_font
-from tkinter import font
-import tkinter
 import re
+import tkinter
+from enum import Enum
 
-
+from constants import Alignment, HSTEP, SCROLLBAR_WIDTH, VSTEP, WIDTH
+from font_cache import get_font
 from typedclasses import DisplayListItem, LineItem, Tag, Text
 
 
@@ -12,6 +11,7 @@ class Layout:
     cursor_y: int
     cursor_x: int
     line: list
+    alignment: Enum
 
     def token(self, tok: Text | Tag) -> None:
         if isinstance(tok, Text):
@@ -40,13 +40,11 @@ class Layout:
                 case "/p":
                     self.flush()
                     self.cursor_y += VSTEP
-                case (
-                    'h1 class="title"'
-                ):  # TODO: make this less brittle; encompass tag types in an enum?
-                    self.alignment = "center"
+                case 'h1 class="title"':
+                    self.alignment = Alignment.CENTER
                 case "/h1":
                     self.flush()
-                    self.alignment = None
+                    self.alignment = Alignment.RIGHT
 
     def word(self, word) -> None:
         font = get_font(self.size, self.weight, self.style)
@@ -56,9 +54,7 @@ class Layout:
         if self.cursor_x + w > self.width - HSTEP - SCROLLBAR_WIDTH:
             self.flush()
 
-        self.line.append(
-            LineItem(x=self.cursor_x, text=word, font=font, parent=self.parent_tag)
-        )
+        self.line.append(LineItem(x=self.cursor_x, text=word, font=font))
         self.cursor_x += w + font.measure(" ")
 
         # Increase cursor_y if the character is a newline
@@ -80,14 +76,12 @@ class Layout:
         if self.rtl:
             offset = self.width - (HSTEP * 2) - self.cursor_x
 
-        if self.alignment == "center":
+        if self.alignment == Alignment.CENTER:
             offset = int((self.width - self.line[-1].x - SCROLLBAR_WIDTH) / 2)
 
         # Add words to display_list
         for item in self.line:
             y = baseline - item.font.metrics("ascent")
-            # if item.parent == 'h1 class="title"':
-            # offset = int((self.width - self.line[-1].x - SCROLLBAR_WIDTH) / 2)
             item.x += offset
             self.display_list.append(DisplayListItem(item.x, y, item.text, item.font))
 
@@ -108,8 +102,7 @@ class Layout:
         self.line: list[LineItem] = []
         self.width: int = width
         self.size: int = 12
-        self.parent_tag = None
-        self.alignment: str | None = None
+        self.alignment: Enum = Alignment.RIGHT
 
         for tok in tokens:
             self.token(tok)
@@ -121,8 +114,13 @@ def lex(body: str) -> list[Tag | Text]:
     buffer = ""
     out: list[Tag | Text] = []
     in_tag = False
-    title = re.search("<title>(.*)</title>", body).group(1)
-    body = body.replace(title, "")
+
+    title = re.search("<title>(.*)</title>", body)
+    title_text = ""
+    if title:
+        title_text = title.group(1)
+    body = body.replace(title_text, "")
+
     for c in body:
         if c == "<":
             in_tag = True  # word is in between < >
