@@ -124,8 +124,8 @@ def lex(body: str, view_source: bool = False) -> list[Tag | Text]:
     if title:
         title_text = title.group(1)
     body = body.replace(title_text, "")
-    body = body.replace("&gt;", ">")
-    body = body.replace("&lt;", "<")
+    # body = body.replace("&gt;", ">")
+    # body = body.replace("&lt;", "<")
 
     if view_source:
         out.append(Text(body))

@@ -61,7 +61,7 @@ class TestURL:
     def test_view_source_parses_http_content(self):
         socket.patch().start()
         ssl.patch().start()
-        url = "view_source:https://test.test/example1"
+        url = "view-source:https://test.test/example1"
         socket.respond(
             url,
             b"HTTP/1.0 200 OK\r\n" + b"Header1: Value1\r\n\r\n" + b"Body text",

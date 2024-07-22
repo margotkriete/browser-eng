@@ -107,7 +107,7 @@ class TestBrowser:
         socket.patch().start()
         socket.respond("http://example.org/", mock_http_response(b"<b>bodytext</b>"))
         browser = Browser()
-        browser.load(URL("view_source:http://example.org"))
+        browser.load(URL("view-source:http://example.org"))
         assert len(browser.display_list) == 1
         assert browser.display_list[0].text == "<b>bodytext</b>"
 
