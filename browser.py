@@ -34,7 +34,9 @@ class Browser:
         if not body:
             return
         self.text = lex(body)
-        self.display_list = Layout(self.text, rtl=self.rtl).display_list
+        self.display_list = Layout(
+            tokens=self.text, width=self.screen_width, rtl=self.rtl
+        ).display_list
         self.draw_scrollbar()
         self.draw()
 
@@ -118,7 +120,9 @@ class Browser:
             return
         self.screen_height = e.height
         self.screen_width = e.width
-        self.display_list = Layout(self.text, self.screen_width, self.rtl).display_list
+        self.display_list = Layout(
+            tokens=self.text, width=self.screen_width, rtl=self.rtl
+        ).display_list
         self.draw()
         self.draw_scrollbar()
 

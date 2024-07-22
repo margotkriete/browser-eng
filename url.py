@@ -57,7 +57,7 @@ class URL:
         return self.data
 
     # Exercise 2.6
-    def _request_about_blank(self) -> str:
+    def _request_about_blank(self) -> None:
         return None
 
     def _request_http(self) -> str:
