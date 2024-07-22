@@ -7,8 +7,13 @@ from constants import PORTS
 class URL:
 
     def __init__(self, url: str) -> None:
+        self.view_source: bool = False
         try:
-            if url.startswith("data"):
+            if url.startswith("view_source"):
+                view_source, full_url = url.split(":", 1)
+                self.scheme, url = full_url.split("://", 1)
+                self.view_source = view_source == "view_source"
+            elif url.startswith("data"):
                 self.scheme, url = url.split(":", 1)
             else:
                 self.scheme, url = url.split("://", 1)
@@ -37,7 +42,7 @@ class URL:
         return req
 
     def request(self):
-        if self.scheme in ["http", "https"]:
+        if self.scheme in ["http", "https", "view_source"]:
             return self._request_http()
 
         if self.scheme == "data":

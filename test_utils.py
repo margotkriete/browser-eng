@@ -64,7 +64,6 @@ class socket:
     @classmethod
     def respond(cls, url, response, method="GET", body=None):
         cls.URLs[url] = [method, response, body]
-        print("URLs in test socket", cls.URLs)
 
     @classmethod
     def respond_ok(cls, url, response, method="GET", body=None):

@@ -102,3 +102,16 @@ class TestBrowser:
         assert coordinates.y0 == 0
         assert coordinates.x1 == 1200
         assert coordinates.y1 == 652
+
+    def test_browser_view_source_renders_tags(self):
+        socket.patch().start()
+        socket.respond("http://example.org/", mock_http_response(b"<b>bodytext</b>"))
+        browser = Browser()
+        browser.load(URL("view_source:http://example.org"))
+        assert len(browser.display_list) == 1
+        assert browser.display_list[0].text == "<b>bodytext</b>"
+
+    def test_browser_http_does_not_render_tag(self, mock_socket):
+        browser = mock_socket(response_body_text=b"<b>bodytext</b>")
+        assert len(browser.display_list) == 1
+        assert browser.display_list[0].text == "bodytext"
