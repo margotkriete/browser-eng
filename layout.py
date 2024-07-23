@@ -5,6 +5,7 @@ from constants import Alignment, Style, Weight, HSTEP, SCROLLBAR_WIDTH, VSTEP, W
 from font_cache import get_font
 from typedclasses import DisplayListItem, LineItem
 from parser import Text, Element
+from typing import Optional
 
 
 def replace_character_references(s: str) -> str:
@@ -34,11 +35,11 @@ class Layout:
     ) -> tuple[str, tkinter.font.Font]:
         for char in word:
             if char.islower() and char.isalpha():
-                font = get_font(self.size - 2, "bold", self.style)
+                font = get_font(self.size - 2, Weight.BOLD.value, self.style)
                 word = word.replace(char, char.upper())
         return word, font
 
-    def open_tag(self, tag: str) -> None:
+    def open_tag(self, tag: str, attributes: Optional[dict] = None) -> None:
         match tag:
             case "i":
                 self.style = Style.ITALIC.value
@@ -50,12 +51,16 @@ class Layout:
                 self.size += 4
             case "br":
                 self.flush()
-            case 'h1 class="title"':
-                self.alignment = Alignment.CENTER
+            case "h1":
+                if attributes.get("class") == "title":
+                    self.alignment = Alignment.CENTER
             case "abbr":
                 self.abbr = True
+            case "pre":
+                self.in_pre = True
+                self.family = "Courier New"
 
-    def close_tag(self, tag: str) -> None:
+    def close_tag(self, tag: str, attributes: Optional[dict] = None) -> None:
         match tag:
             case "i":
                 self.style = Style.ROMAN.value
@@ -69,10 +74,14 @@ class Layout:
                 self.flush()
                 self.cursor_y += VSTEP
             case "h1":
-                self.flush()
-                self.alignment = Alignment.RIGHT
+                if attributes.get("class") == "title":
+                    self.flush()
+                    self.alignment = Alignment.RIGHT
             case "abbr":
                 self.abbr = False
+            case "pre":
+                self.in_pre = False
+                self.family = None
 
     def word(self, word: str) -> None:
         font = get_font(self.size, self.weight, self.style, self.family)
@@ -130,13 +139,19 @@ class Layout:
 
     def recurse(self, tree) -> None:
         if isinstance(tree, Text):
-            for word in tree.text.split():
-                self.word(word)
+            if not self.in_pre:
+                for word in tree.text.split():
+                    self.word(word)
+            else:
+                for line in tree.text.split("\n"):
+                    self.word(line)
+                    if not line:
+                        self.flush()
         else:
-            self.open_tag(tree.tag)
+            self.open_tag(tree.tag, tree.attributes)
             for child in tree.children:
                 self.recurse(child)
-            self.close_tag(tree.tag)
+            self.close_tag(tree.tag, tree.attributes)
 
     def __init__(
         self,

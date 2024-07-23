@@ -70,7 +70,6 @@ class TestBrowser:
         e.height = 400
         e.width = 600
         browser.resize(e)
-
         assert browser.screen_width == e.width
 
         # All x coordinates should be > HSTEP and < screen width

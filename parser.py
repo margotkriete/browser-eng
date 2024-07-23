@@ -3,21 +3,26 @@ from typing import Optional, Tuple
 
 
 class Text:
-    def __init__(self, text: str, parent):
+    def __init__(self, text: str, parent: "Element"):
         self.text: str = text
         self.children: list[Element | Text] = []
-        self.parent = parent
+        self.parent: Element = parent
 
     def __repr__(self) -> str:
         return repr(self.text)
 
 
 class Element:
-    def __init__(self, tag: str, attributes: dict, parent: Optional["Element"] = None):
-        self.tag = tag
+    def __init__(
+        self,
+        tag: str,
+        attributes: Optional[dict] = None,
+        parent: Optional["Element"] = None,
+    ):
+        self.tag: str = tag
         self.children: list[Element | Text] = []
         self.parent: Optional[Element] = parent
-        self.attributes = attributes
+        self.attributes: Optional[dict] = attributes
 
     def __repr__(self) -> str:
         return f"<{self.tag}>"
@@ -100,7 +105,7 @@ class HTMLParser:
         self.body = self.body.replace(title_text, "")
 
         if self.view_source:
-            self.add_text(text)
+            self.add_text(self.body)
             return self.finish()
 
         for c in self.body:
