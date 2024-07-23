@@ -1,9 +1,10 @@
 import argparse
 import tkinter
 import tkinter.font
+from parser import HTMLParser, print_tree
 
 from constants import HEIGHT, SCROLL_STEP, SCROLLBAR_WIDTH, TEST_FILE, VSTEP, WIDTH
-from layout import Layout, lex
+from layout import Layout
 from typedclasses import ScrollbarCoordinate
 from url import URL
 
@@ -35,9 +36,9 @@ class Browser:
         if not body:
             return
         self.view_source = url.view_source
-        self.text = lex(body, view_source=url.view_source)
+        self.nodes = HTMLParser(body).parse()
         self.display_list = Layout(
-            tokens=self.text, width=self.screen_width, rtl=self.rtl
+            nodes=self.nodes, width=self.screen_width, rtl=self.rtl
         ).display_list
         self.draw()
 

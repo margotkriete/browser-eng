@@ -1,7 +1,7 @@
 import tkinter
 from enum import Enum
 
-from constants import Alignment, HSTEP, SCROLLBAR_WIDTH, VSTEP, WIDTH
+from constants import Alignment, Style, Weight, HSTEP, SCROLLBAR_WIDTH, VSTEP, WIDTH
 from font_cache import get_font
 from typedclasses import DisplayListItem, LineItem
 from parser import Text, Element
@@ -21,55 +21,6 @@ class Layout:
     abbr: bool
     in_pre: bool
 
-    def token(self, tok: Text | Element) -> None:
-        if isinstance(tok, Text):
-            if not self.in_pre:
-                for word in tok.text.split():
-                    self.word(word)
-            else:
-                for word in tok.text.split("\n"):
-                    self.word(word)
-                    if not word:
-                        self.flush()
-        else:
-            match tok.tag:
-                case "i":
-                    self.style = "italic"
-                case "/i":
-                    self.style = "roman"
-                case "b":
-                    self.weight = "bold"
-                case "/b":
-                    self.weight = "normal"
-                case "small":
-                    self.size -= 2
-                case "/small":
-                    self.size += 2
-                case "big":
-                    self.size += 4
-                case "/big":
-                    self.size -= 4
-                case "br":
-                    self.flush()
-                case "/p":
-                    self.flush()
-                    self.cursor_y += VSTEP
-                case 'h1 class="title"':
-                    self.alignment = Alignment.CENTER
-                case "/h1":
-                    self.flush()
-                    self.alignment = Alignment.RIGHT
-                case "abbr":
-                    self.abbr = True
-                case "/abbr":
-                    self.abbr = False
-                case "pre":
-                    self.in_pre = True
-                    self.family = "Courier New"
-                case "/pre":
-                    self.in_pre = False
-                    self.family = None
-
     def _handle_soft_hyphen(self, word: str, font: tkinter.font.Font) -> None:
         # If word has a soft hyphen, append string before hyphen to the current
         # line, start a new line, and call .word on the rest of the word
@@ -86,6 +37,42 @@ class Layout:
                 font = get_font(self.size - 2, "bold", self.style)
                 word = word.replace(char, char.upper())
         return word, font
+
+    def open_tag(self, tag: str) -> None:
+        match tag:
+            case "i":
+                self.style = Style.ITALIC.value
+            case "b":
+                self.weight = Weight.BOLD.value
+            case "small":
+                self.size -= 2
+            case "big":
+                self.size += 4
+            case "br":
+                self.flush()
+            case 'h1 class="title"':
+                self.alignment = Alignment.CENTER
+            case "abbr":
+                self.abbr = True
+
+    def close_tag(self, tag: str) -> None:
+        match tag:
+            case "i":
+                self.style = Style.ROMAN.value
+            case "b":
+                self.weight = Weight.NORMAL.value
+            case "small":
+                self.size += 2
+            case "big":
+                self.size -= 4
+            case "p":
+                self.flush()
+                self.cursor_y += VSTEP
+            case "h1":
+                self.flush()
+                self.alignment = Alignment.RIGHT
+            case "abbr":
+                self.abbr = False
 
     def word(self, word: str) -> None:
         font = get_font(self.size, self.weight, self.style, self.family)
@@ -141,15 +128,25 @@ class Layout:
         self.cursor_x = HSTEP
         self.line = []
 
+    def recurse(self, tree) -> None:
+        if isinstance(tree, Text):
+            for word in tree.text.split():
+                self.word(word)
+        else:
+            self.open_tag(tree.tag)
+            for child in tree.children:
+                self.recurse(child)
+            self.close_tag(tree.tag)
+
     def __init__(
         self,
-        tokens: list[Element | Text],
+        nodes: list[Element | Text],
         width: int = WIDTH,
         rtl: bool = False,
     ) -> None:
         self.rtl: bool = rtl
         self.cursor_x, self.cursor_y = HSTEP, VSTEP
-        self.weight, self.style = "normal", "roman"
+        self.weight, self.style = Weight.NORMAL.value, Style.ROMAN.value
         self.display_list: list[DisplayListItem] = []
         self.line: list[LineItem] = []
         self.width: int = width
@@ -158,8 +155,5 @@ class Layout:
         self.abbr: bool = False
         self.in_pre: bool = False
         self.family = None
-
-        for tok in tokens:
-            self.token(tok)
-
+        self.recurse(nodes)
         self.flush()
