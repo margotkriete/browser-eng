@@ -140,7 +140,7 @@ class Layout:
 
     def __init__(
         self,
-        nodes: list[Element | Text],
+        tree: Element | Text,
         width: int = WIDTH,
         rtl: bool = False,
     ) -> None:
@@ -155,5 +155,5 @@ class Layout:
         self.abbr: bool = False
         self.in_pre: bool = False
         self.family = None
-        self.recurse(nodes)
+        self.recurse(tree)
         self.flush()

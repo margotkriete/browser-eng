@@ -1,7 +1,7 @@
 import argparse
 import tkinter
 import tkinter.font
-from parser import HTMLParser, print_tree
+from parser import HTMLParser, Element, Text
 
 from constants import HEIGHT, SCROLL_STEP, SCROLLBAR_WIDTH, TEST_FILE, VSTEP, WIDTH
 from layout import Layout
@@ -36,9 +36,9 @@ class Browser:
         if not body:
             return
         self.view_source = url.view_source
-        self.nodes = HTMLParser(body).parse()
+        self.nodes: Element | Text = HTMLParser(body).parse()
         self.display_list = Layout(
-            nodes=self.nodes, width=self.screen_width, rtl=self.rtl
+            tree=self.nodes, width=self.screen_width, rtl=self.rtl
         ).display_list
         self.draw()
 
@@ -121,7 +121,7 @@ class Browser:
         self.screen_height = e.height
         self.screen_width = e.width
         self.display_list = Layout(
-            tokens=self.text, width=self.screen_width, rtl=self.rtl
+            tree=self.nodes, width=self.screen_width, rtl=self.rtl
         ).display_list
         self.draw()
 

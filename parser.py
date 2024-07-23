@@ -5,21 +5,21 @@ from typing import Optional, Tuple
 class Text:
     def __init__(self, text: str, parent):
         self.text: str = text
-        self.children = []
+        self.children: list[Element | Text] = []
         self.parent = parent
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return repr(self.text)
 
 
 class Element:
-    def __init__(self, tag: str, attributes: dict, parent):
+    def __init__(self, tag: str, attributes: dict, parent: Optional["Element"] = None):
         self.tag = tag
-        self.children = []
-        self.parent = parent
+        self.children: list[Element | Text] = []
+        self.parent: Optional[Element] = parent
         self.attributes = attributes
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<{self.tag}>"
 
 
@@ -54,7 +54,7 @@ class HTMLParser:
 
     def __init__(self, body: str, view_source: bool = False) -> None:
         self.body: str = body
-        self.unfinished = []
+        self.unfinished: list[Element] = []
         self.view_source: bool = view_source
 
     def implicit_tags(self, tag: Optional[str] = None) -> None:
@@ -75,8 +75,8 @@ class HTMLParser:
                 break
 
     def get_attributes(self, text: str) -> Tuple[str, dict]:
-        parts: str = text.split()
-        tag = parts[0].casefold()
+        parts: list[str] = text.split()
+        tag: str = parts[0].casefold()
         attributes: dict = {}
         for attrpair in parts[1:]:
             if "=" in attrpair:
@@ -89,9 +89,7 @@ class HTMLParser:
                 attributes[attrpair.casefold()] = ""
         return tag, attributes
 
-    def parse(
-        self,
-    ) -> list[Element | Text]:
+    def parse(self) -> Element | Text:
         text: str = ""
         in_tag = False
 
@@ -126,7 +124,7 @@ class HTMLParser:
             return
         self.implicit_tags(None)
         # Add text as a child of the last unfinished node
-        parent = self.unfinished[-1]
+        parent: Element = self.unfinished[-1]
         node: Text = Text(text, parent)
         parent.children.append(node)
 
@@ -140,18 +138,17 @@ class HTMLParser:
                 return
             # Close tags finish last unfinished node by adding
             # it to the previous unfinished node
-            node = self.unfinished.pop()
-            parent = self.unfinished[-1]
-            parent.children.append(node)
+            node: Element = self.unfinished.pop()
+            parent: Optional[Element] = self.unfinished[-1]
+            if parent:
+                parent.children.append(node)
         elif tag in self.SELF_CLOSING_TAGS:
             parent = self.unfinished[-1]
-            node: Element = Element(tag=tag, attributes=attributes, parent=parent)
+            node = Element(tag=tag, attributes=attributes, parent=parent)
             parent.children.append(node)
         else:
-            parent: Element | Text | None = (
-                self.unfinished[-1] if self.unfinished else None
-            )
-            node: Element = Element(tag=tag, attributes=attributes, parent=parent)
+            parent = self.unfinished[-1] if self.unfinished else None
+            node = Element(tag=tag, attributes=attributes, parent=parent)
             self.unfinished.append(node)
 
     def finish(self) -> Element | Text:
