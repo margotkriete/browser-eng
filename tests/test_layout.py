@@ -38,7 +38,7 @@ class TestLayout:
         assert word3.x == HSTEP
 
     def test_abbr_tag(self):
-        text = [Tag("abbr"), Text("json"), Tag("/abbr")]
+        text = [Element("abbr"), Text("json"), Element("/abbr")]
         layout = Layout(text)
         assert len(layout.display_list) == 1
         word1 = layout.display_list[0]
