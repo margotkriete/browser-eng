@@ -52,18 +52,29 @@ class Layout:
                     self.abbr = False
 
     def word(self, word: str) -> None:
+        font = get_font(self.size, self.weight, self.style)
         if self.abbr:
             for char in word:
                 if char.islower() and char.isalpha():
                     font = get_font(self.size - 2, "bold", self.style)
                     word = word.replace(char, char.upper())
-        else:
-            font = get_font(self.size, self.weight, self.style)
         w = font.measure(word)
 
-        # Wrap text once we reach the edge of the screen
         if self.cursor_x + w > self.width - HSTEP - SCROLLBAR_WIDTH:
+            if "&shy;" in word:
+                # If word has a soft hyphen, append string before hyphen
+                # to the current line, start a new line,
+                # and call .word on the rest of the word
+                split_text = word.split("&shy;", 1)
+                self.line.append(
+                    LineItem(x=self.cursor_x, text=split_text[0], font=font)
+                )
+                self.flush()
+                self.word(split_text[1])
+                return
             self.flush()
+        elif "&shy;" in word:
+            word = word.replace("&shy;", "")
 
         self.line.append(LineItem(x=self.cursor_x, text=word, font=font))
         self.cursor_x += w + font.measure(" ")
@@ -136,8 +147,6 @@ def lex(body: str, view_source: bool = False) -> list[Tag | Text]:
     if title:
         title_text = title.group(1)
     body = body.replace(title_text, "")
-    # body = body.replace("&gt;", ">")
-    # body = body.replace("&lt;", "<")
 
     if view_source:
         out.append(Text(body))

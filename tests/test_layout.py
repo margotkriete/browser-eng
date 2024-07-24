@@ -44,3 +44,35 @@ class TestLayout:
         assert word1.text == "JSON"
         assert word1.font.size == 10
         assert word1.font.weight == "bold"
+
+    def test_soft_hyphen_breaks_long_line(self):
+        text = [
+            Text(
+                "super­cali­fragi­listic­expi­ali­docious&shy;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            )
+        ]
+        layout = Layout(text)
+        assert len(layout.display_list) == 2
+        assert layout.display_list[0].text == "super­cali­fragi­listic­expi­ali­docious"
+        assert layout.display_list[1].text == "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        # Both words should start at the beginning of the line
+        assert layout.display_list[0].x == layout.display_list[1].x
+        assert layout.display_list[0].y < layout.display_list[1].y
+
+    def test_soft_hyphen_removes_hyphen_if_word_fits(self):
+        text = [Text("super­cali­fragi­list&shy;ic­expi­ali­docious")]
+        layout = Layout(text)
+        assert len(layout.display_list) == 1
+        assert layout.display_list[0].text == "super­cali­fragi­listic­expi­ali­docious"
+
+    def test_soft_hyphen_handles_multiple_hyphens(self):
+        text = [
+            Text(
+                "super­cali­fragi­listic­expi­ali­docious&shy;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&shy;bbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            )
+        ]
+        layout = Layout(text)
+        assert len(layout.display_list) == 3
+        assert layout.display_list[0].text == "super­cali­fragi­listic­expi­ali­docious"
+        assert layout.display_list[1].text == "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        assert layout.display_list[2].text == "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
