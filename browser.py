@@ -40,7 +40,6 @@ class Browser:
             tokens=self.text, width=self.screen_width, rtl=self.rtl
         ).display_list
         self.draw()
-        self.draw_scrollbar()
 
     # Exercise 2.4
     def get_scrollbar_coordinates(self) -> ScrollbarCoordinate:
@@ -93,6 +92,7 @@ class Browser:
                 anchor="nw",
                 tag="text",
             )
+        self.draw_scrollbar()
 
     def scrolldown(self, e) -> None:
         if not self.display_list:
@@ -100,13 +100,11 @@ class Browser:
         if self.scroll + self.screen_height < self._get_page_height():
             self.scroll += SCROLL_STEP
             self.draw()
-            self.draw_scrollbar()
 
     def scrollup(self, e) -> None:
         if self.scroll >= SCROLL_STEP:
             self.scroll -= SCROLL_STEP
         self.draw()
-        self.draw_scrollbar()
 
     # Exercise 2.2
     def mousescroll(self, e) -> None:
@@ -114,7 +112,6 @@ class Browser:
         if (updated_scroll < self._get_page_height()) and (self.scroll - e.delta > 0):
             self.scroll -= e.delta
             self.draw()
-            self.draw_scrollbar()
 
     # Exercise 2.3
     def resize(self, e: tkinter.Event) -> None:
@@ -126,7 +123,6 @@ class Browser:
             tokens=self.text, width=self.screen_width, rtl=self.rtl
         ).display_list
         self.draw()
-        self.draw_scrollbar()
 
 
 if __name__ == "__main__":
