@@ -53,7 +53,9 @@ class TestLayout:
         ]
         layout = Layout(text)
         assert len(layout.display_list) == 2
-        assert layout.display_list[0].text == "super­cali­fragi­listic­expi­ali­docious"
+        assert (
+            layout.display_list[0].text == "super­cali­fragi­listic­expi­ali­docious-"
+        )
         assert layout.display_list[1].text == "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         # Both words should start at the beginning of the line
         assert layout.display_list[0].x == layout.display_list[1].x
@@ -73,6 +75,8 @@ class TestLayout:
         ]
         layout = Layout(text)
         assert len(layout.display_list) == 3
-        assert layout.display_list[0].text == "super­cali­fragi­listic­expi­ali­docious"
-        assert layout.display_list[1].text == "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        assert (
+            layout.display_list[0].text == "super­cali­fragi­listic­expi­ali­docious-"
+        )
+        assert layout.display_list[1].text == "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-"
         assert layout.display_list[2].text == "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
