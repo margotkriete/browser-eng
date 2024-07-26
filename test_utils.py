@@ -114,11 +114,12 @@ class SilentTk:
 
 
 class TkFont:
-    def __init__(self, size=None, weight=None, slant=None, style=None):
+    def __init__(self, size=None, weight=None, slant=None, style=None, family=None):
         self.size = size
         self.weight = weight
         self.slant = slant
         self.style = style
+        self.family = family
 
     def measure(self, word):
         return self.size * len(word)
@@ -134,8 +135,8 @@ class TkFont:
         return all
 
     def __repr__(self):
-        return "Font size={} weight={} slant={} style={}".format(
-            self.size, self.weight, self.slant, self.style
+        return "Font size={} weight={} slant={} style={} family={}".format(
+            self.size, self.weight, self.slant, self.style, self.family
         )
 
 
