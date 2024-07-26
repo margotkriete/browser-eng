@@ -80,3 +80,30 @@ class TestLayout:
         )
         assert layout.display_list[1].text == "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-"
         assert layout.display_list[2].text == "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+
+    def test_pre_tag_uses_monospaced_font(self):
+        layout = Layout([Tag("pre"), Text("def get_font(self):"), Tag("/pre")])
+        assert len(layout.display_list) == 1
+        assert layout.display_list[0].font.family == "Courier New"
+
+    def test_pre_tag_maintains_whitespace(self):
+        layout = Layout(
+            [Tag("pre"), Text("def get_font(self):               return"), Tag("/pre")]
+        )
+        assert len(layout.display_list) == 1
+        assert layout.display_list[0].text == "def get_font(self):               return"
+
+    def test_pre_tag_maintains_nested_tags(self):
+        layout = Layout(
+            [
+                Tag("pre"),
+                Text("def get_font(self):"),
+                Tag("b"),
+                Text("return"),
+                Tag("/b"),
+                Tag("/pre"),
+            ]
+        )
+        assert len(layout.display_list) == 2
+        assert layout.display_list[1].font.weight == "bold"
+        assert layout.display_list[1].font.family == "Courier New"
