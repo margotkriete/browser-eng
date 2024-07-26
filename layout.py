@@ -84,7 +84,7 @@ class Layout:
         for char in word:
             if char.islower() and char.isalpha():
                 font = get_font(self.size - 2, "bold", self.style)
-                word, font = word.replace(char, char.upper())
+                word = word.replace(char, char.upper())
         return word, font
 
     def word(self, word: str) -> None:
