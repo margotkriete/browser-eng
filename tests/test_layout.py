@@ -40,6 +40,18 @@ class TestLayout:
         assert word1.font.size == 10
         assert word1.font.weight == "bold"
 
+    def test_abbr_tag_respects_mixed_casing(self):
+        # This doesn't pass the specifications in the exercise, as it
+        # still bolds the uppercase letters in e.g. JsOn
+        tree = HTMLParser("<head><abbr>JsOn 123</abbr>").parse()
+        layout = Layout(tree)
+        assert len(layout.display_list) == 2
+        word1 = layout.display_list[0]
+        assert word1.text == "JSON"
+        assert word1.font.weight == "bold"
+        word2 = layout.display_list[1]
+        assert word2.font.weight == "normal"
+
     def test_soft_hyphen_breaks_long_line(self):
         tree = HTMLParser(
             "super­cali­fragi­listic­expi­ali­docious&shy;aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
@@ -90,15 +102,3 @@ class TestLayout:
         assert len(layout.display_list) == 2
         assert layout.display_list[1].font.weight == "bold"
         assert layout.display_list[1].font.family == "Courier New"
-
-    def test_abbr_tag_respects_mixed_casing(self):
-        # This doesn't pass the specifications in the exercise, as it
-        # still bolds the uppercase letters in e.g. JsOn
-        tree = HTMLParser("<head><abbr>JsOn 123</abbr>").parse()
-        layout = Layout(tree)
-        assert len(layout.display_list) == 2
-        word1 = layout.display_list[0]
-        assert word1.text == "JSON"
-        word2 = layout.display_list[1]
-        assert word2.text == "123"
-        assert word2.font.weight == "normal"

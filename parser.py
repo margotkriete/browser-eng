@@ -100,18 +100,20 @@ class HTMLParser:
         return tag, attributes
 
     def parse(self) -> Element | Text:
-        text: str = ""
-        in_tag = False
-
         title = re.search("<title>(.*)</title>", self.body)
-        title_text = ""
         if title:
-            title_text = title.group(1)
-        self.body = self.body.replace(title_text, "")
+            self.body = self.body.replace(title.group(1), "")
 
         if self.view_source:
             self.add_text(self.body)
             return self.finish()
+
+        self._parse_body()
+        return self.finish()
+
+    def _parse_body(self) -> None:
+        text: str = ""
+        in_tag = False
 
         for c in self.body:
             if c == "<":
@@ -128,7 +130,6 @@ class HTMLParser:
 
         if not in_tag and text:
             self.add_text(text)
-        return self.finish()
 
     def add_text(self, text: str) -> None:
         if text.isspace():
