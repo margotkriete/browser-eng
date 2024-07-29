@@ -113,16 +113,27 @@ class HTMLParser:
 
     def _parse_body(self) -> None:
         text: str = ""
-        in_tag = False
+        in_tag, in_comment = False, False
 
-        for c in self.body:
+        for i, c in enumerate(self.body):
             if c == "<":
-                in_tag = True  # word is in between < >
+                if in_comment:
+                    continue
+                in_tag = True
+                if i + 4 < len(self.body) and self.body[i + 1 : i + 4] == "!--":
+                    in_comment = True
+                    continue
                 if text:
+                    # Open tag marks the end of existing text, so create text node
                     self.add_text(text)
                 text = ""
             elif c == ">":
                 in_tag = False
+                if self.body[i - 2 : i] == "--" and in_comment:
+                    in_comment = False
+                    text = ""
+                    continue
+                # Close tag marks the beginning of tag, so create node
                 self.add_tag(text)
                 text = ""
             else:
@@ -133,8 +144,7 @@ class HTMLParser:
 
     def add_text(self, text: str) -> None:
         if text.isspace():
-            if len(self.unfinished) and self.unfinished[-1].tag != "pre":
-                return
+            return
         self.implicit_tags(None)
         text = self.replace_character_references(text)
         # Add text as a child of the last unfinished node
