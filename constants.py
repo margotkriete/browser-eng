@@ -12,3 +12,13 @@ PORTS = {"http": 80, "https": 443}
 class Alignment(Enum):
     RIGHT = 1
     CENTER = 2
+
+
+class Style(Enum):
+    ROMAN = "roman"
+    ITALIC = "italic"
+
+
+class Weight(Enum):
+    BOLD = "bold"
+    NORMAL = "normal"

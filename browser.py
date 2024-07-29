@@ -1,9 +1,10 @@
 import argparse
 import tkinter
 import tkinter.font
+from parser import HTMLParser, Element, Text
 
 from constants import HEIGHT, SCROLL_STEP, SCROLLBAR_WIDTH, TEST_FILE, VSTEP, WIDTH
-from layout import Layout, lex
+from layout import Layout
 from typedclasses import ScrollbarCoordinate
 from url import URL
 
@@ -34,10 +35,11 @@ class Browser:
         body = url.request()
         if not body:
             return
-        self.view_source = url.view_source
-        self.text = lex(body, view_source=url.view_source)
+        self.nodes: Element | Text = HTMLParser(
+            body, view_source=url.view_source
+        ).parse()
         self.display_list = Layout(
-            tokens=self.text, width=self.screen_width, rtl=self.rtl
+            tree=self.nodes, width=self.screen_width, rtl=self.rtl
         ).display_list
         self.draw()
 
@@ -104,23 +106,23 @@ class Browser:
     def scrollup(self, e) -> None:
         if self.scroll >= SCROLL_STEP:
             self.scroll -= SCROLL_STEP
-        self.draw()
+            self.draw()
 
     # Exercise 2.2
     def mousescroll(self, e) -> None:
-        updated_scroll = self.scroll - e.delta + self.screen_height
-        if (updated_scroll < self._get_page_height()) and (self.scroll - e.delta > 0):
+        scroll_change = self.scroll - e.delta
+        if (scroll_change + self.screen_height < self._get_page_height()) and (
+            scroll_change > 0
+        ):
             self.scroll -= e.delta
             self.draw()
 
     # Exercise 2.3
     def resize(self, e: tkinter.Event) -> None:
-        if not hasattr(self, "text"):
-            return
         self.screen_height = e.height
         self.screen_width = e.width
         self.display_list = Layout(
-            tokens=self.text, width=self.screen_width, rtl=self.rtl
+            tree=self.nodes, width=self.screen_width, rtl=self.rtl
         ).display_list
         self.draw()
 
