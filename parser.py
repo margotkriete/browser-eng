@@ -57,6 +57,11 @@ class HTMLParser:
         "script",
     ]
 
+    def replace_character_references(self, s: str) -> str:
+        s = s.replace("&lt;", "<")
+        s = s.replace("&gt;", ">")
+        return s
+
     def __init__(self, body: str, view_source: bool = False) -> None:
         self.body: str = body
         self.unfinished: list[Element] = []
@@ -120,14 +125,17 @@ class HTMLParser:
                 text = ""
             else:
                 text += c
+
         if not in_tag and text:
             self.add_text(text)
         return self.finish()
 
     def add_text(self, text: str) -> None:
         if text.isspace():
-            return
+            if len(self.unfinished) and self.unfinished[-1].tag != "pre":
+                return
         self.implicit_tags(None)
+        text = self.replace_character_references(text)
         # Add text as a child of the last unfinished node
         parent: Element = self.unfinished[-1]
         node: Text = Text(text, parent)

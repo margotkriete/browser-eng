@@ -8,12 +8,6 @@ from parser import Text, Element
 from typing import Optional
 
 
-def replace_character_references(s: str) -> str:
-    s = s.replace("&lt;", "<")
-    s = s.replace("&gt;", ">")
-    return s
-
-
 class Layout:
     cursor_y: int
     cursor_x: int
@@ -145,7 +139,7 @@ class Layout:
             else:
                 for line in tree.text.split("\n"):
                     self.word(line)
-                    if not line:
+                    if line:
                         self.flush()
         else:
             self.open_tag(tree.tag, tree.attributes)
