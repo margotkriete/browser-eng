@@ -5,7 +5,7 @@ from constants import Alignment, Style, Weight, HSTEP, SCROLLBAR_WIDTH, VSTEP, W
 from font_cache import get_font
 from typedclasses import DisplayListItem, LineItem
 from parser import Text, Element
-from typing import Optional
+from typing import Literal, Optional
 
 
 class Layout:
@@ -15,6 +15,9 @@ class Layout:
     alignment: Enum
     abbr: bool
     in_pre: bool
+    style: Literal["roman", "italic"]
+    weight: Literal["bold", "normal"]
+    family: Optional[str]
 
     def _handle_soft_hyphen(self, word: str, font: tkinter.font.Font) -> None:
         # If word has a soft hyphen, append string before hyphen to the current
@@ -46,7 +49,7 @@ class Layout:
             case "br":
                 self.flush()
             case "h1":
-                if attributes.get("class") == "title":
+                if attributes and attributes.get("class") == "title":
                     self.alignment = Alignment.CENTER
             case "abbr":
                 self.abbr = True
@@ -68,7 +71,7 @@ class Layout:
                 self.flush()
                 self.cursor_y += VSTEP
             case "h1":
-                if attributes.get("class") == "title":
+                if attributes and attributes.get("class") == "title":
                     self.flush()
                     self.alignment = Alignment.RIGHT
             case "abbr":
