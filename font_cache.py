@@ -1,17 +1,25 @@
 import tkinter
-from typing import Optional
+from typing import Literal, Optional
+from constants import Weight
 
 FONTS = {}
 
 
 def get_font(
-    size: int, weight: str, style: str, family: Optional[str] = None
+    size: int,
+    weight: Literal["bold", "normal"],
+    style: Literal["roman", "italic"],
+    family: Optional[str] = None,
 ) -> tkinter.font.Font:
     key: tuple = (size, weight, style, family)
     if key not in FONTS:
-        font: tkinter.font.Font = tkinter.font.Font(
-            size=size, weight=weight, slant=style, family=family
-        )
+        font: tkinter.font.Font
+        if not family:
+            font = tkinter.font.Font(size=size, weight=weight, slant=style)
+        else:
+            font = tkinter.font.Font(
+                size=size, weight=weight, slant=style, family=family
+            )
         label: tkinter.Label = tkinter.Label(font=font)
         FONTS[key] = (font, label)
     return FONTS[key][0]
