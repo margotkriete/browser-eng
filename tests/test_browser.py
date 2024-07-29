@@ -29,7 +29,7 @@ def mock_http_response(text):
 
 
 class TestBrowser:
-    def test_browser_load_display_list(self, mock_socket):
+    def test_browser_loads_display_list(self, mock_socket):
         browser = mock_socket()
         assert len(browser.display_list) == 2
         first_word = browser.display_list[0]
@@ -45,7 +45,7 @@ class TestBrowser:
         # Words should have the same y coordinate
         assert first_word.y == second_word.y
 
-    def test_browser_load_rtl(self, mock_socket):
+    def test_browser_loads_rtl(self, mock_socket):
         browser = mock_socket(rtl=True)
         assert len(browser.display_list) == 2
         first_word = browser.display_list[0]
@@ -62,7 +62,7 @@ class TestBrowser:
         # span entire width
         assert first_word.x > HSTEP
 
-    def test_browser_resize_width(self, mock_socket):
+    def test_browser_resizes_width(self, mock_socket):
         browser = mock_socket(response_body_text=LOREM_IPSUM)
         assert browser.screen_width == WIDTH
 
@@ -76,7 +76,7 @@ class TestBrowser:
         assert all(item.x < browser.screen_width for item in browser.display_list)
         assert all(item.x >= HSTEP for item in browser.display_list)
 
-    def test_browser_resize_height(self, mock_socket):
+    def test_browser_resizes_height(self, mock_socket):
         browser = mock_socket(response_body_text=LOREM_IPSUM)
         assert browser.screen_height == HEIGHT
         previous_doc_height = browser.display_list[-1].y
@@ -90,7 +90,7 @@ class TestBrowser:
         # display_list[-1][1] is the last y coordinate of the document
         assert browser.display_list[-1].y != previous_doc_height
 
-    def test_browser_scrollbar_align_after_resize(self, mock_socket):
+    def test_browser_scrollbar_aligns_after_resize(self, mock_socket):
         browser = mock_socket(response_body_text=LOREM_IPSUM)
         e = tkinter.Event()
         e.height = 400
@@ -110,7 +110,7 @@ class TestBrowser:
         assert len(browser.display_list) == 1
         assert browser.display_list[0].text == "<b>bodytext</b>"
 
-    def test_browser_http_does_not_render_tag(self, mock_socket):
+    def test_browser_without_view_source_does_not_render_tag(self, mock_socket):
         browser = mock_socket(response_body_text=b"<b>bodytext</b>")
         assert len(browser.display_list) == 1
         assert browser.display_list[0].text == "bodytext"
