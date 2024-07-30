@@ -8,10 +8,10 @@ class TestParser:
     )
     def test_parses_tags_and_adds_missing(self, input):
         parsed = HTMLParser(input).parse()
-        assert str(parsed) == "<html>"
+        assert parsed.tag == "html"
         assert len(parsed.children) == 1
         child = parsed.children[0]
-        assert str(child) == "<body>"
+        assert child.tag == "body"
         assert len(child.children) == 1
         assert child.children[0].text == "test"
 
@@ -19,28 +19,42 @@ class TestParser:
         parsed = HTMLParser(
             "<base><basefont></basefont><title></title><div></div>"
         ).parse()
-        assert str(parsed) == "<html>"
-
+        assert parsed.tag == "html"
         # <html> should have <head> and <body> nested beneath
         assert len(parsed.children) == 2
         head_tag = parsed.children[0]
-        assert str(head_tag) == "<head>"
+        assert head_tag.tag == "head"
         assert len(head_tag.children) == 3
-        assert str(head_tag.children[0]) == "<base>"
-        assert str(head_tag.children[1]) == "<basefont>"
-        assert str(head_tag.children[2]) == "<title>"
+        assert head_tag.children[0].tag == "base"
+        assert head_tag.children[1].tag == "basefont"
+        assert head_tag.children[2].tag == "title"
         body_tag = parsed.children[1]
-        assert str(body_tag) == "<body>"
+        assert body_tag.tag == "body"
         assert len(body_tag.children) == 1
-        assert str(body_tag.children[0]) == "<div>"
+        assert body_tag.children[0].tag == "div"
 
     def test_skips_creating_nodes_for_comments(self):
-        parsed = HTMLParser("<div><!-- ab<>cd !--></div>").parse()
-        assert str(parsed) == "<html>"
+        parsed = HTMLParser("<div><!-- ab<>cd--></div>").parse()
+        assert parsed.tag == "html"
         assert len(parsed.children) == 1
         child = parsed.children[0]
-        assert str(child) == "<body>"
+        assert child.tag == "body"
         assert len(child.children) == 1
-        assert str(child.children[0]) == "<div>"
+        assert child.children[0].tag == "div"
         div = child.children[0]
         assert len(div.children) == 0
+
+    def test_comments_ignored_when_adjacent_to_elements(self):
+        parsed = HTMLParser(
+            "<div><!-- ab<>cd-->test<!--comment--></div><p>test2</p>"
+        ).parse()
+        assert parsed.tag == "html"
+        assert len(parsed.children) == 1
+        child = parsed.children[0]
+        assert child.tag == "body"
+        assert len(child.children) == 2
+        assert child.children[0].tag == "div"
+        div = child.children[0]
+        p = child.children[1]
+        assert div.children[0].text == "test"
+        assert p.children[0].text == "test2"

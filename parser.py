@@ -114,26 +114,24 @@ class HTMLParser:
     def _parse_body(self) -> None:
         text: str = ""
         in_tag, in_comment = False, False
+        body_length = len(self.body)
 
         for i, c in enumerate(self.body):
             if c == "<":
                 if in_comment:
                     continue
-                in_tag = True
-                if i + 4 < len(self.body) and self.body[i + 1 : i + 4] == "!--":
+                if i + 4 < body_length and self.body[i + 1 : i + 4] == "!--":
                     in_comment = True
-                    continue
+                in_tag = True
                 if text:
-                    # Open tag marks the end of existing text, so create text node
                     self.add_text(text)
                 text = ""
             elif c == ">":
                 in_tag = False
-                if self.body[i - 2 : i] == "--" and in_comment:
+                if i - 2 > 0 and self.body[i - 2 : i] == "--" and in_comment:
                     in_comment = False
                     text = ""
                     continue
-                # Close tag marks the beginning of tag, so create node
                 self.add_tag(text)
                 text = ""
             else:
