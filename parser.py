@@ -56,6 +56,7 @@ class HTMLParser:
         "style",
         "script",
     ]
+    SIBLING_TAGS = ["p", "li"]
 
     def replace_character_references(self, s: str) -> str:
         s = s.replace("&lt;", "<")
@@ -170,6 +171,12 @@ class HTMLParser:
             parent.children.append(node)
         else:
             parent = self.unfinished[-1] if self.unfinished else None
+            # If we see a `p` tag nested within an unfinished `p` tag, add a closing
+            # `p` tag - why is the other closing `p` tag not created?
+            if tag in self.SIBLING_TAGS and parent and parent.tag in self.SIBLING_TAGS:
+                node = Element(tag=f"/{tag}", attributes=attributes, parent=parent)
+                parent.children.append(node)
+
             node = Element(tag=tag, attributes=attributes, parent=parent)
             self.unfinished.append(node)
 
