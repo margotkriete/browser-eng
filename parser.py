@@ -159,7 +159,7 @@ class HTMLParser:
         if tag.startswith("/"):
             if len(self.unfinished) == 1:
                 return
-            # Close tags finish last unfinished node by adding
+            # Close tags finish the last unfinished node by adding
             # it to the previous unfinished node
             node: Element = self.unfinished.pop()
             parent: Optional[Element] = self.unfinished[-1]
@@ -171,14 +171,36 @@ class HTMLParser:
             parent.children.append(node)
         else:
             parent = self.unfinished[-1] if self.unfinished else None
-            # If we see a `p` tag nested within an unfinished `p` tag, add a closing
-            # `p` tag - why is the other closing `p` tag not created?
-            if tag in self.SIBLING_TAGS and parent and parent.tag in self.SIBLING_TAGS:
-                node = Element(tag=f"/{tag}", attributes=attributes, parent=parent)
-                parent.children.append(node)
-
+            if tag in self.SIBLING_TAGS:
+                if self.unfinished:
+                    self.handle_nested_p_parent_tag(attributes)
             node = Element(tag=tag, attributes=attributes, parent=parent)
             self.unfinished.append(node)
+
+    def handle_nested_p_parent_tag(self, attributes):
+        tags_to_close = []
+        has_parent_p_tag = any(item.tag == "p" for item in self.unfinished)
+        if has_parent_p_tag:
+            while self.unfinished:
+                node = self.unfinished.pop()
+                if node.tag == "p":
+                    break
+                tags_to_close.append(node)
+
+            parent_p_tag = node
+            new_parent = Element(
+                tag=parent_p_tag.tag, attributes=attributes, parent=parent_p_tag.parent
+            )
+            self.unfinished.append(new_parent)
+            print("found parent p tag", parent_p_tag)
+            print("unfinished", self.unfinished)
+            print("tags to close", tags_to_close)
+
+            tags_to_close.reverse()
+            for tag in tags_to_close:
+                self.unfinished.append(tag)
+
+            print("unfinished", self.unfinished)
 
     def finish(self) -> Element | Text:
         if not self.unfinished:
