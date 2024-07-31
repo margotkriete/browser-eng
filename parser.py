@@ -172,35 +172,56 @@ class HTMLParser:
         else:
             parent = self.unfinished[-1] if self.unfinished else None
             if tag in self.SIBLING_TAGS:
-                if self.unfinished:
-                    self.handle_nested_p_parent_tag(attributes)
+                # If the parent <p> tag is a direct parent, finish the
+                # parent node and
+                if parent and parent.tag in self.SIBLING_TAGS:
+                    # Pop parent tag off and append to previously unfinished node to finish it
+                    parent_p_tag: Element = self.unfinished.pop()
+                    parent = self.unfinished[-1]
+                    if parent:
+                        parent.children.append(parent_p_tag)
+                    # Reset parent to the parent_p_tag so we create the nested
+                    # <p> tag below
+                    parent = parent_p_tag
+                # If the parent tag isn't a direct <p> tag, look for parent p tag in the
+                # descendants
+                has_parent_p_tag = any(item.tag == "p" for item in self.unfinished)
+                if has_parent_p_tag:
+                    # Iterate through unfinished nodes until we find the parent 'p' tag
+                    tags_to_finish = []
+                    while self.unfinished:
+                        node = self.unfinished.pop()
+                        if node.tag == "p":
+                            break
+                        tags_to_finish.append(node)
+                    # Now finish
+
             node = Element(tag=tag, attributes=attributes, parent=parent)
             self.unfinished.append(node)
 
-    def handle_nested_p_parent_tag(self, attributes):
+    def handle_nested_p_parent_tag(self):
         tags_to_close = []
         has_parent_p_tag = any(item.tag == "p" for item in self.unfinished)
         if has_parent_p_tag:
             while self.unfinished:
                 node = self.unfinished.pop()
+                tags_to_close.append(node)
                 if node.tag == "p":
                     break
-                tags_to_close.append(node)
-
-            parent_p_tag = node
-            new_parent = Element(
-                tag=parent_p_tag.tag, attributes=attributes, parent=parent_p_tag.parent
-            )
-            self.unfinished.append(new_parent)
-            print("found parent p tag", parent_p_tag)
-            print("unfinished", self.unfinished)
-            print("tags to close", tags_to_close)
 
             tags_to_close.reverse()
-            for tag in tags_to_close:
-                self.unfinished.append(tag)
-
-            print("unfinished", self.unfinished)
+            parent_p_tag = node
+            print("tags to close", tags_to_close)
+            print("parent p tag parent - should be body", parent_p_tag.parent)
+            # Once we find the parent p tag,
+            new_parent = Element(
+                tag=parent_p_tag.tag,
+                attributes=parent_p_tag.attributes,
+                parent=parent_p_tag.parent,
+            )
+            for tag_to_close in tags_to_close:
+                new_parent.children.append(tag_to_close)
+            self.unfinished.append(new_parent)
 
     def finish(self) -> Element | Text:
         if not self.unfinished:
