@@ -38,10 +38,6 @@ class Browser:
         self.nodes: Element | Text = HTMLParser(
             body, view_source=url.view_source
         ).parse()
-
-        from parser import print_tree
-
-        print_tree(self.nodes)
         self.display_list = Layout(
             tree=self.nodes, width=self.screen_width, rtl=self.rtl
         ).display_list

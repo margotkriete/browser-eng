@@ -25,7 +25,7 @@ class Element:
         self.attributes: Optional[dict] = attributes
 
     def __repr__(self) -> str:
-        return f"<{self.tag}>" + f"{self.attributes}"
+        return f"<{self.tag}>"
 
 
 class HTMLParser:
@@ -182,7 +182,7 @@ class HTMLParser:
         tags_to_finish = []
 
         # If <p> is nested within another <p> tag, finish the first tag and create another
-        if parent and parent.tag in self.SIBLING_TAGS:
+        if parent and parent.tag in self.SIBLING_TAGS and parent.tag == tag:
             parent_p_tag: Element = self.unfinished.pop()
             parent = self.unfinished[-1]
             if parent:
