@@ -1,4 +1,3 @@
-import test_utils
 from constants import HSTEP
 from layout import Layout
 from parser import Text, Element, HTMLParser

@@ -54,5 +54,11 @@ HEAD_TAGS = [
     "script",
 ]
 
+HEAD_TAG = "head"
+HTML_TAG = "html"
+BODY_TAG = "body"
+CLOSING_HTML_TAG = "/html"
+CLOSING_HEAD_TAG = "/html"
+
 
 SIBLING_TAGS = ["p", "li"]
