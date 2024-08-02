@@ -1,5 +1,6 @@
 import re
 from typing import Optional, Tuple
+from constants import SELF_CLOSING_TAGS, HEAD_TAGS, SIBLING_TAGS
 
 
 class Text:
@@ -27,35 +28,16 @@ class Element:
     def __repr__(self) -> str:
         return f"<{self.tag}>"
 
+    def __str__(self) -> str:
+        child_strings = ""
+        for child in self.children:
+            child_strings += str(child)
+
+        close_tag = "" if self.tag in SELF_CLOSING_TAGS else f"</{self.tag}>"
+        return f"<{self.tag}>{child_strings}{close_tag}"
+
 
 class HTMLParser:
-    SELF_CLOSING_TAGS = [
-        "area",
-        "base",
-        "br",
-        "col",
-        "embed",
-        "hr",
-        "img",
-        "input",
-        "link",
-        "meta",
-        "param",
-        "source",
-        "track",
-        "wbr",
-    ]
-    HEAD_TAGS = [
-        "base",
-        "basefont",
-        "bgsound",
-        "noscript",
-        "link",
-        "meta",
-        "title",
-        "style",
-        "script",
-    ]
 
     def replace_character_references(self, s: str) -> str:
         s = s.replace("&lt;", "<")
@@ -73,13 +55,11 @@ class HTMLParser:
             if open_tags == [] and tag != "html":
                 self.add_tag("html")
             elif open_tags == ["html"] and tag not in ["head", "body", "/html"]:
-                if tag in self.HEAD_TAGS:
+                if tag in HEAD_TAGS:
                     self.add_tag("head")
                 else:
                     self.add_tag("body")
-            elif (
-                open_tags == ["html", "head"] and tag not in ["/head"] + self.HEAD_TAGS
-            ):
+            elif open_tags == ["html", "head"] and tag not in ["/head"] + HEAD_TAGS:
                 self.add_tag("/head")
             else:
                 break
@@ -158,20 +138,57 @@ class HTMLParser:
         if tag.startswith("/"):
             if len(self.unfinished) == 1:
                 return
-            # Close tags finish last unfinished node by adding
+            # Close tags finish the last unfinished node by adding
             # it to the previous unfinished node
             node: Element = self.unfinished.pop()
             parent: Optional[Element] = self.unfinished[-1]
             if parent:
                 parent.children.append(node)
-        elif tag in self.SELF_CLOSING_TAGS:
+        elif tag in SELF_CLOSING_TAGS:
             parent = self.unfinished[-1]
             node = Element(tag=tag, attributes=attributes, parent=parent)
             parent.children.append(node)
         else:
-            parent = self.unfinished[-1] if self.unfinished else None
-            node = Element(tag=tag, attributes=attributes, parent=parent)
-            self.unfinished.append(node)
+            if tag in SIBLING_TAGS:
+                self.handle_nested_tags(tag, attributes)
+            else:
+                parent = self.unfinished[-1] if self.unfinished else None
+                node = Element(tag=tag, attributes=attributes, parent=parent)
+                self.unfinished.append(node)
+
+    # TODO: clean this up, handle <li> tags
+    def handle_nested_tags(self, tag, attributes) -> None:
+        parent = self.unfinished[-1] if self.unfinished else None
+        tags_to_finish = []
+
+        # If <p> is nested within another <p> tag, finish the first tag and create another
+        if parent and parent.tag in SIBLING_TAGS and parent.tag == tag:
+            parent_p_tag: Element = self.unfinished.pop()
+            parent = self.unfinished[-1]
+            if parent:
+                parent.children.append(parent_p_tag)
+                parent = parent_p_tag
+        # If the parent tag isn't the same, look for parent p tag in the descendents
+        elif any(item.tag == "p" for item in self.unfinished):
+            while self.unfinished:
+                last_node = self.unfinished.pop()
+                if last_node.tag == "p":
+                    break
+                tags_to_finish.append(last_node)
+            # Add tags to finish as children of parent tag
+            tags_to_finish.reverse()
+            node_to_append = last_node
+            for item in tags_to_finish:
+                node_to_append.children.append(item)
+                node_to_append = item
+            # Parent tag is finished, so append it to the last unfinished node
+            self.unfinished[-1].children.append(last_node)
+        node = Element(tag=tag, attributes=attributes, parent=parent)
+        self.unfinished.append(node)
+        for item in tags_to_finish:
+            self.unfinished.append(
+                Element(tag=item.tag, attributes=attributes, parent=node)
+            )
 
     def finish(self) -> Element | Text:
         if not self.unfinished:
