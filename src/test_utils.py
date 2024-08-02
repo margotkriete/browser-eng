@@ -3,6 +3,13 @@ import tkinter.font
 from unittest import mock
 
 
+"""
+The classes in this file are pulled from
+https://github.com/browserengineering/book/blob/33177b132c8bca4e02f38b9d88ab8b94605d62c2/src/test.py.
+
+"""
+
+
 class socket:
     URLs = {}
     Requests = {}
