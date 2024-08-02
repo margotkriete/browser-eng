@@ -38,7 +38,6 @@ class Element:
 
 
 class HTMLParser:
-
     def replace_character_references(self, s: str) -> str:
         s = s.replace("&lt;", "<")
         s = s.replace("&gt;", ">")
@@ -88,32 +87,51 @@ class HTMLParser:
             self.add_text(self.body)
             return self.finish()
 
-        self._parse_body()
+        self.lexer()
         return self.finish()
 
-    def _parse_body(self) -> None:
+    def _started_comment_tag(self, i: str, body_length: int) -> bool:
+        return i + 4 < body_length and self.body[i + 1 : i + 4] == "!--"
+
+    def _finished_comment_tag(self, i: str, in_comment: bool) -> bool:
+        return i - 2 > 0 and self.body[i - 2 : i] == "--" and in_comment
+
+    def _finished_script_tag(self, i: str) -> bool:
+        return self.body[i + 1 : i + 8] == "/script"
+
+    def lexer(self) -> None:
         text: str = ""
-        in_tag, in_comment = False, False
+        in_tag, in_comment, in_script = False, False, False
         body_length = len(self.body)
 
         for i, c in enumerate(self.body):
             if c == "<":
                 if in_comment:
                     continue
-                if i + 4 < body_length and self.body[i + 1 : i + 4] == "!--":
+                if self._started_comment_tag(i, body_length):
                     in_comment = True
+                if self._finished_script_tag(i):
+                    in_script = False
+                if in_script:
+                    text += c
+                    continue
                 in_tag = True
                 if text:
                     self.add_text(text)
                 text = ""
             elif c == ">":
-                in_tag = False
-                if i - 2 > 0 and self.body[i - 2 : i] == "--" and in_comment:
+                if self._finished_comment_tag(i, in_comment):
                     in_comment = False
                     text = ""
                     continue
+                if in_script:
+                    text += c
+                    continue
+                if text == "script":
+                    in_script = True
                 self.add_tag(text)
                 text = ""
+                in_tag = False
             else:
                 text += c
 
