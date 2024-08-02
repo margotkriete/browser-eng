@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+
 import io
 import tkinter.font
 from unittest import mock

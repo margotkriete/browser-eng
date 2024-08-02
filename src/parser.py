@@ -90,13 +90,13 @@ class HTMLParser:
         self.lexer()
         return self.finish()
 
-    def _started_comment_tag(self, i: str, body_length: int) -> bool:
+    def _started_comment_tag(self, i: int, body_length: int) -> bool:
         return i + 4 < body_length and self.body[i + 1 : i + 4] == "!--"
 
-    def _finished_comment_tag(self, i: str, in_comment: bool) -> bool:
+    def _finished_comment_tag(self, i: int, in_comment: bool) -> bool:
         return i - 2 > 0 and self.body[i - 2 : i] == "--" and in_comment
 
-    def _finished_script_tag(self, i: str) -> bool:
+    def _finished_script_tag(self, i: int) -> bool:
         return self.body[i + 1 : i + 8] == "/script"
 
     def lexer(self) -> None:
