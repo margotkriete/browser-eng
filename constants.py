@@ -40,6 +40,8 @@ SELF_CLOSING_TAGS = [
     "track",
     "wbr",
 ]
+
+
 HEAD_TAGS = [
     "base",
     "basefont",
@@ -51,4 +53,6 @@ HEAD_TAGS = [
     "style",
     "script",
 ]
+
+
 SIBLING_TAGS = ["p", "li"]

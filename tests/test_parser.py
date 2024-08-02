@@ -30,3 +30,10 @@ class TestParser:
         assert (
             str(parsed) == "<html><body><div>'test'</div><p>'test2'</p></body></html>"
         )
+
+    def test_script_tag_does_not_create_child_nodes(self):
+        parsed = HTMLParser("<script>window.load() => {}</script>").parse()
+        assert (
+            str(parsed)
+            == "<html><head><script>'window.load() => {}'</script></head></html>"
+        )

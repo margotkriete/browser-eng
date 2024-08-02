@@ -38,7 +38,6 @@ class Element:
 
 
 class HTMLParser:
-
     def replace_character_references(self, s: str) -> str:
         s = s.replace("&lt;", "<")
         s = s.replace("&gt;", ">")
