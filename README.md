@@ -1,29 +1,29 @@
 This project is a Python implementation of the [Web Browser Engineering](http://browser.engineering) course. The program builds and launches a basic, and currently very incomplete, web browser.
 
-### Requirements
+### Install requirements
 
-- TODO: add `requirements.txt` file
-- Python 3.10+
-- `pytest`
+```
+$ pyenv python3 -m pip install requirements.txt
+```
 
 ### Run browser
 
 To request a URL:
 
 ```
-$ python3 browser.py <URL>
+$ python3 src/browser.py <URL>
 ```
 
 To request a file:
 
 ```
-$ python3 browser.py <FILENAME>
+$ python3 src/browser.py <FILENAME>
 ```
 
 To view a URL's source code:
 
 ```
-$ python3 browser.py view-source:<URL>
+$ python3 src/browser.py view-source:<URL>
 ```
 
 ### Run tests
