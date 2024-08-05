@@ -78,20 +78,21 @@ class HTMLParser:
             else:
                 break
 
-    def get_attributes(self, text: str) -> Tuple[str, dict]:
-        parts: list[str] = text.split()
-        tag: str = parts[0].casefold()
-        attributes: dict = {}
-        for attrpair in parts[1:]:
+    def get_attributes(
+        self, text: str, attributes: Optional[list] = []
+    ) -> Tuple[str, dict]:
+        tag: str = text.casefold()
+        attrs_dict: dict = {}
+        for attrpair in attributes:
             if "=" in attrpair:
                 key, value = attrpair.split("=", 1)
                 # fmt: off
                 if len(value) > 2 and value[0] in ["'", '\"']:
                     value = value[1:-1]
-                attributes[key.casefold()] = value
+                attrs_dict[key.casefold()] = value
             else:
-                attributes[attrpair.casefold()] = ""
-        return tag, attributes
+                attrs_dict[attrpair.casefold()] = ""
+        return tag, attrs_dict
 
     def parse(self) -> Element | Text:
         title = re.search("<title>(.*)</title>", self.body)
@@ -116,41 +117,80 @@ class HTMLParser:
 
     def lexer(self) -> None:
         text: str = ""
-        in_tag, in_comment, in_script = False, False, False
+        IN_TAG, IN_COMMENT, IN_SCRIPT, IN_ATTR, IN_QUOTED_ATTR = (
+            False,
+            False,
+            False,
+            False,
+            False,
+        )
         body_length: int = len(self.body)
+        attributes = []
+        current_attribute = ""
 
         for i, c in enumerate(self.body):
-            if c == "<":
-                if in_comment:
+            if c == '"':
+                if IN_QUOTED_ATTR:
+                    IN_QUOTED_ATTR = False
+                    IN_ATTR = True
+                elif IN_ATTR:
+                    IN_QUOTED_ATTR = True
+                    IN_ATTR = False
+            elif c == " ":
+                if IN_QUOTED_ATTR:
+                    current_attribute += c
+                elif IN_TAG:
+                    IN_ATTR = True
+                    if current_attribute:
+                        attributes.append(current_attribute)
+                        current_attribute = ""
+                else:
+                    text += c
+            elif c == "<":
+                if IN_QUOTED_ATTR:
+                    current_attribute += c
+                    continue
+                if IN_COMMENT:
                     continue
                 if self._started_comment_tag(i, body_length):
-                    in_comment = True
+                    IN_COMMENT = True
                 if self._finished_script_tag(i):
-                    in_script = False
-                if in_script:
+                    IN_SCRIPT = False
+                if IN_SCRIPT:
                     text += c
                     continue
-                in_tag = True
+                IN_TAG = True
                 if text:
                     self.add_text(text)
                 text = ""
             elif c == ">":
-                if self._finished_comment_tag(i, in_comment):
-                    in_comment = False
+                if IN_QUOTED_ATTR:
+                    current_attribute += c
+                    continue
+                if self._finished_comment_tag(i, IN_COMMENT):
+                    IN_COMMENT = False
                     text = ""
                     continue
-                if in_script:
+                if IN_SCRIPT:
                     text += c
                     continue
                 if text == "script":
-                    in_script = True
-                self.add_tag(text)
+                    IN_SCRIPT = True
+                if IN_ATTR:
+                    attributes.append(current_attribute)
+                    current_attribute = ""
+                self.add_tag(text, attributes)
                 text = ""
-                in_tag = False
+                attributes = []
+                IN_TAG = False
+                IN_ATTR = False
             else:
+                if IN_QUOTED_ATTR or IN_ATTR:
+                    current_attribute += c
+                    continue
                 text += c
 
-        if not in_tag and text:
+        if not IN_TAG and text:
             self.add_text(text)
 
     def add_text(self, text: str) -> None:
@@ -163,8 +203,9 @@ class HTMLParser:
         node: Text = Text(text, parent)
         parent.children.append(node)
 
-    def add_tag(self, tag: str) -> None:
-        tag, attributes = self.get_attributes(tag)
+    def add_tag(self, tag: str, attributes: Optional[list] = []) -> None:
+        print("adding tag", tag)
+        tag, attributes = self.get_attributes(tag, attributes)
         if tag.startswith("!"):
             return
         self.implicit_tags(tag)
