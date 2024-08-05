@@ -41,8 +41,9 @@ class Element:
         child_strings, attr_string = "", ""
         for child in self.children:
             child_strings += str(child)
-        for attr in self.attributes:
-            attr_string += f" {attr}='{self.attributes[attr]}'"
+        if self.attributes:
+            for attr in self.attributes:
+                attr_string += f" {attr}='{self.attributes[attr]}'"
         close_tag = "" if self.tag in SELF_CLOSING_TAGS else f"</{self.tag}>"
         return f"<{self.tag}{attr_string}>{child_strings}{close_tag}"
 
@@ -85,15 +86,16 @@ class HTMLParser:
     ) -> Tuple[str, dict]:
         tag: str = text.casefold()
         attrs_dict: dict = {}
-        for attrpair in attributes:
-            if "=" in attrpair:
-                key, value = attrpair.split("=", 1)
-                # fmt: off
-                if len(value) > 2 and value[0] in ["'", '\"']:
-                    value = value[1:-1]
-                attrs_dict[key.casefold()] = value
-            else:
-                attrs_dict[attrpair.casefold()] = ""
+        if attributes:
+            for attrpair in attributes:
+                if "=" in attrpair:
+                    key, value = attrpair.split("=", 1)
+                    # fmt: off
+                    if len(value) > 2 and value[0] in ["'", '\"']:
+                        value = value[1:-1]
+                    attrs_dict[key.casefold()] = value
+                else:
+                    attrs_dict[attrpair.casefold()] = ""
         return tag, attrs_dict
 
     def parse(self) -> Element | Text:
@@ -206,7 +208,7 @@ class HTMLParser:
         parent.children.append(node)
 
     def add_tag(self, tag: str, attributes: Optional[list] = []) -> None:
-        tag, attributes = self.get_attributes(tag, attributes)
+        tag, attrs_dict = self.get_attributes(tag, attributes)
         if tag.startswith("!"):
             return
         self.implicit_tags(tag)
@@ -221,14 +223,14 @@ class HTMLParser:
                 parent.children.append(node)
         elif tag in SELF_CLOSING_TAGS:
             parent = self.unfinished[-1]
-            node = Element(tag=tag, attributes=attributes, parent=parent)
+            node = Element(tag=tag, attributes=attrs_dict, parent=parent)
             parent.children.append(node)
         else:
             if tag in SIBLING_TAGS:
-                self.handle_nested_tags(tag, attributes)
+                self.handle_nested_tags(tag, attrs_dict)
             else:
                 parent = self.unfinished[-1] if self.unfinished else None
-                node = Element(tag=tag, attributes=attributes, parent=parent)
+                node = Element(tag=tag, attributes=attrs_dict, parent=parent)
                 self.unfinished.append(node)
 
     # TODO: clean this up, handle <li> tags
