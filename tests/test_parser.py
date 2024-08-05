@@ -37,3 +37,17 @@ class TestParser:
             str(parsed)
             == "<html><head><script>'window.load() => {}'</script></head></html>"
         )
+
+    def test_handles_attributes(self):
+        parsed = HTMLParser("<p disabled id='1'>content</p>").parse()
+        assert (
+            str(parsed)
+            == "<html><body><p disabled='' id='1'>'content'</p></body></html>"
+        )
+
+    def test_handles_quoted_attributes(self):
+        parsed = HTMLParser("<div id='1' class='test > abcd'>content</div>").parse()
+        assert (
+            str(parsed)
+            == "<html><body><div id='1' class='test > abcd'>'content'</div></body></html>"
+        )

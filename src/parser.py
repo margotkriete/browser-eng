@@ -38,11 +38,13 @@ class Element:
         return f"<{self.tag}>"
 
     def __str__(self) -> str:
-        child_strings = ""
+        child_strings, attr_string = "", ""
         for child in self.children:
             child_strings += str(child)
+        for attr in self.attributes:
+            attr_string += f" {attr}='{self.attributes[attr]}'"
         close_tag = "" if self.tag in SELF_CLOSING_TAGS else f"</{self.tag}>"
-        return f"<{self.tag}>{child_strings}{close_tag}"
+        return f"<{self.tag}{attr_string}>{child_strings}{close_tag}"
 
 
 class HTMLParser:
@@ -129,7 +131,7 @@ class HTMLParser:
         current_attribute = ""
 
         for i, c in enumerate(self.body):
-            if c == '"':
+            if c == '"' or c == "'":
                 if IN_QUOTED_ATTR:
                     IN_QUOTED_ATTR = False
                     IN_ATTR = True
@@ -204,7 +206,6 @@ class HTMLParser:
         parent.children.append(node)
 
     def add_tag(self, tag: str, attributes: Optional[list] = []) -> None:
-        print("adding tag", tag)
         tag, attributes = self.get_attributes(tag, attributes)
         if tag.startswith("!"):
             return
