@@ -1,4 +1,7 @@
+# mypy: ignore-errors
+
 import io
+
 import tkinter.font
 from unittest import mock
 
@@ -118,6 +121,9 @@ class ssl:
 class SilentTk:
     def bind(self, event, callback):
         pass
+
+
+tkinter.Tk = SilentTk
 
 
 class TkFont:

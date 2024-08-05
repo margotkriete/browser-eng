@@ -1,6 +1,15 @@
 import re
 from typing import Optional, Tuple
-from constants import SELF_CLOSING_TAGS, HEAD_TAGS, SIBLING_TAGS
+from constants import (
+    SELF_CLOSING_TAGS,
+    HEAD_TAGS,
+    SIBLING_TAGS,
+    HTML_TAG,
+    HEAD_TAG,
+    CLOSING_HEAD_TAG,
+    CLOSING_HTML_TAG,
+    BODY_TAG,
+)
 
 
 class Text:
@@ -32,7 +41,6 @@ class Element:
         child_strings = ""
         for child in self.children:
             child_strings += str(child)
-
         close_tag = "" if self.tag in SELF_CLOSING_TAGS else f"</{self.tag}>"
         return f"<{self.tag}>{child_strings}{close_tag}"
 
@@ -51,15 +59,22 @@ class HTMLParser:
     def implicit_tags(self, tag: Optional[str] = None) -> None:
         while True:
             open_tags = [node.tag for node in self.unfinished]
-            if open_tags == [] and tag != "html":
-                self.add_tag("html")
-            elif open_tags == ["html"] and tag not in ["head", "body", "/html"]:
+            if open_tags == [] and tag != HTML_TAG:
+                self.add_tag(HTML_TAG)
+            elif open_tags == [HTML_TAG] and tag not in [
+                HEAD_TAG,
+                BODY_TAG,
+                CLOSING_HTML_TAG,
+            ]:
                 if tag in HEAD_TAGS:
-                    self.add_tag("head")
+                    self.add_tag(HEAD_TAG)
                 else:
-                    self.add_tag("body")
-            elif open_tags == ["html", "head"] and tag not in ["/head"] + HEAD_TAGS:
-                self.add_tag("/head")
+                    self.add_tag(BODY_TAG)
+            elif (
+                open_tags == [HTML_TAG, HEAD_TAG]
+                and tag not in [CLOSING_HEAD_TAG] + HEAD_TAGS
+            ):
+                self.add_tag(CLOSING_HEAD_TAG)
             else:
                 break
 
@@ -90,19 +105,19 @@ class HTMLParser:
         self.lexer()
         return self.finish()
 
-    def _started_comment_tag(self, i: str, body_length: int) -> bool:
+    def _started_comment_tag(self, i: int, body_length: int) -> bool:
         return i + 4 < body_length and self.body[i + 1 : i + 4] == "!--"
 
-    def _finished_comment_tag(self, i: str, in_comment: bool) -> bool:
+    def _finished_comment_tag(self, i: int, in_comment: bool) -> bool:
         return i - 2 > 0 and self.body[i - 2 : i] == "--" and in_comment
 
-    def _finished_script_tag(self, i: str) -> bool:
+    def _finished_script_tag(self, i: int) -> bool:
         return self.body[i + 1 : i + 8] == "/script"
 
     def lexer(self) -> None:
         text: str = ""
         in_tag, in_comment, in_script = False, False, False
-        body_length = len(self.body)
+        body_length: int = len(self.body)
 
         for i, c in enumerate(self.body):
             if c == "<":
@@ -216,9 +231,3 @@ class HTMLParser:
             parent = self.unfinished[-1]
             parent.children.append(node)
         return self.unfinished.pop()
-
-
-def print_tree(node, indent: int = 0):
-    print(" " * indent, node)
-    for child in node.children:
-        print_tree(child, indent + 1)

@@ -1,7 +1,7 @@
 import pytest
 import tkinter
+from test_utils import socket
 
-import test_utils
 from browser import Browser
 from constants import HEIGHT, HSTEP, WIDTH
 from test_utils import socket
