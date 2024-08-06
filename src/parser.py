@@ -54,10 +54,9 @@ class HTMLParser:
         s = s.replace("&gt;", ">")
         return s
 
-    def __init__(self, body: str, view_source: bool = False) -> None:
+    def __init__(self, body: str) -> None:
         self.body: str = body
         self.unfinished: list[Element] = []
-        self.view_source: bool = view_source
 
     def implicit_tags(self, tag: Optional[str] = None) -> None:
         while True:
@@ -102,10 +101,6 @@ class HTMLParser:
         title = re.search("<title>(.*)</title>", self.body)
         if title:
             self.body = self.body.replace(title.group(1), "")
-
-        if self.view_source:
-            self.add_text(self.body)
-            return self.finish()
 
         self.lexer()
         return self.finish()
@@ -275,3 +270,38 @@ class HTMLParser:
             parent = self.unfinished[-1]
             parent.children.append(node)
         return self.unfinished.pop()
+
+
+class ViewSourceHTMLParser(HTMLParser):
+    # view-source creates only text nodes and bold tag nodes.
+    # We add a <b> tag before parsing actual text, and treat other
+    # tags as if they were text, not tags.
+
+    def lexer(self) -> None:
+        IN_TAG, IN_TEXT = False, False
+        buffer: str = ""
+
+        for c in self.body:
+            if c == "<":
+                IN_TAG = True
+                if IN_TEXT:
+                    self.add_text(buffer)
+                    self.add_tag("/b")
+                    IN_TEXT = False
+                    buffer = c
+                else:
+                    buffer += c
+            elif c == ">":
+                buffer += c
+                IN_TAG = False
+                if buffer:
+                    self.add_text(buffer)
+                    buffer = ""
+            else:
+                buffer += c
+                if not IN_TAG and not IN_TEXT and not c.isspace():
+                    self.add_tag("b")
+                    IN_TEXT = True
+
+        if buffer:
+            self.add_text(buffer)
