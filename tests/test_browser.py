@@ -104,13 +104,17 @@ class TestBrowser:
 
     def test_browser_view_source_renders_tags(self):
         socket.patch().start()
-        socket.respond("http://example.org/", mock_http_response(b"<b>bodytext</b>"))
+        socket.respond(
+            "http://example.org/", mock_http_response(b"<html><body></body></html>")
+        )
         browser = Browser()
         browser.load(URL("view-source:http://example.org"))
-        assert len(browser.display_list) == 1
-        assert browser.display_list[0].text == "<b>bodytext</b>"
+        assert len(browser.display_list) == 4
+        assert browser.display_list[0].text == "<html>"
+        assert browser.display_list[1].text == "<body>"
+        assert browser.display_list[2].text == "</body>"
+        assert browser.display_list[3].text == "</html>"
 
     def test_browser_without_view_source_does_not_render_tag(self, mock_socket):
-        browser = mock_socket(response_body_text=b"<b>bodytext</b>")
-        assert len(browser.display_list) == 1
-        assert browser.display_list[0].text == "bodytext"
+        browser = mock_socket(response_body_text=b"<html><body></body></html>")
+        assert len(browser.display_list) == 0

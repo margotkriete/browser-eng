@@ -51,10 +51,9 @@ class HTMLParser:
         s = s.replace("&gt;", ">")
         return s
 
-    def __init__(self, body: str, view_source: bool = False) -> None:
+    def __init__(self, body: str) -> None:
         self.body: str = body
         self.unfinished: list[Element] = []
-        self.view_source: bool = view_source
 
     def implicit_tags(self, tag: Optional[str] = None) -> None:
         while True:
@@ -231,8 +230,8 @@ class HTMLParser:
 
 class ViewSourceHTMLParser(HTMLParser):
     # view-source creates only text nodes and bold tag nodes.
-    # We add a <b> tag before parsing actual text, and treat everything
-    # else as if it were text text.
+    # We add a <b> tag before parsing actual text, and treat other
+    # tags as if they were text, not tags.
 
     def lexer(self) -> None:
         IN_TAG, IN_TEXT = False, False

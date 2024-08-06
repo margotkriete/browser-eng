@@ -42,14 +42,9 @@ class Browser:
         if not body:
             return
         if url.view_source:
-            self.nodes: Element | Text = ViewSourceHTMLParser(
-                body, view_source=url.view_source
-            ).parse()
-            print_tree(self.nodes)
+            self.nodes: Element | Text = ViewSourceHTMLParser(body).parse()
         else:
-            self.nodes: Element | Text = HTMLParser(
-                body, view_source=url.view_source
-            ).parse()
+            self.nodes: Element | Text = HTMLParser(body).parse()
         self.display_list = Layout(
             tree=self.nodes, width=self.screen_width, rtl=self.rtl
         ).display_list
