@@ -98,10 +98,6 @@ class HTMLParser:
         if title:
             self.body = self.body.replace(title.group(1), "")
 
-        if self.view_source:
-            self.add_text(self.body)
-            return self.finish()
-
         self.lexer()
         return self.finish()
 
@@ -231,3 +227,38 @@ class HTMLParser:
             parent = self.unfinished[-1]
             parent.children.append(node)
         return self.unfinished.pop()
+
+
+class ViewSourceHTMLParser(HTMLParser):
+    # view-source creates only text nodes and bold tag nodes.
+    # We add a <b> tag before parsing actual text, and treat everything
+    # else as if it were text text.
+
+    def lexer(self) -> None:
+        IN_TAG, IN_TEXT = False, False
+        buffer: str = ""
+
+        for c in self.body:
+            if c == "<":
+                IN_TAG = True
+                if IN_TEXT:
+                    self.add_text(buffer)
+                    self.add_tag("/b")
+                    IN_TEXT = False
+                    buffer = c
+                else:
+                    buffer += c
+            elif c == ">":
+                buffer += c
+                IN_TAG = False
+                if buffer:
+                    self.add_text(buffer)
+                    buffer = ""
+            else:
+                buffer += c
+                if not IN_TAG and not IN_TEXT and not c.isspace():
+                    self.add_tag("b")
+                    IN_TEXT = True
+
+        if buffer:
+            self.add_text(buffer)
