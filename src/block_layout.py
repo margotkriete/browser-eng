@@ -1,14 +1,24 @@
 import tkinter
 from enum import Enum
 
-from constants import Alignment, Style, Weight, HSTEP, SCROLLBAR_WIDTH, VSTEP, WIDTH
+from constants import (
+    BLOCK_ELEMENTS,
+    Alignment,
+    Style,
+    Weight,
+    HSTEP,
+    SCROLLBAR_WIDTH,
+    VSTEP,
+    INLINE_LAYOUT,
+    BLOCK_LAYOUT,
+)
 from font_cache import get_font
 from typedclasses import DisplayListItem, LineItem
 from parser import Text, Element
 from typing import Literal, Optional
 
 
-class Layout:
+class BlockLayout:
     cursor_y: int
     cursor_x: int
     line: list
@@ -123,15 +133,15 @@ class Layout:
 
         # Add words to display_list
         for item in self.line:
-            y = baseline - item.font.metrics("ascent")
-            item.x += offset
+            y = self.y + baseline - item.font.metrics("ascent")
+            item.x += self.x + offset
             self.display_list.append(DisplayListItem(item.x, y, item.text, item.font))
 
         # Update cursor_x and cursor_y
         # cursor_y moves below baseline to account for deepest character
         max_descent = max([metric["descent"] for metric in metrics])
         self.cursor_y = baseline + 1.25 * max_descent
-        self.cursor_x = HSTEP
+        self.cursor_x = 0
         self.line = []
 
     def recurse(self, tree) -> None:
@@ -152,20 +162,88 @@ class Layout:
 
     def __init__(
         self,
-        tree: Element | Text,
-        width: int = WIDTH,
+        node: Element | Text,
+        parent,
+        previous,
+        width: Optional[int] = None,
         rtl: bool = False,
-    ) -> None:
-        self.rtl: bool = rtl
-        self.cursor_x, self.cursor_y = HSTEP, VSTEP
-        self.weight, self.style = Weight.NORMAL.value, Style.ROMAN.value
-        self.display_list: list[DisplayListItem] = []
-        self.line: list[LineItem] = []
-        self.width: int = width
-        self.size: int = 12
-        self.alignment: Enum = Alignment.RIGHT
-        self.abbr: bool = False
-        self.in_pre: bool = False
+    ):
+        self.node = node
+        self.parent = parent
+        self.previous = previous
+        self.children = []
+        self.width: Optional[int] = width
+        # height is a public field and always contains the correct value;
+        # cursor_y changes as we lay out paragraphs and sometimes "wrong"
+        self.height: Optional[int] = None
+        self.rtl = rtl
+        self.in_pre = False
         self.family = None
-        self.recurse(tree)
-        self.flush()
+        self.abbr: bool = False
+        self.alignment: Enum = Alignment.RIGHT
+        self.display_list: list[DisplayListItem] = []
+        self.x: int = None
+        self.y: int = None
+
+    def layout_intermediate(self):
+        previous = None
+        # self.node.children is in the HTML tree
+        for child in self.node.children:
+            next = BlockLayout(child, self, previous)
+            # self.children is in the layout tree
+            self.children.append(next)
+            previous = next
+
+    def layout_mode(self):
+        if isinstance(self.node, Text):
+            return INLINE_LAYOUT
+        elif any(
+            [
+                isinstance(child, Element) and child.tag in BLOCK_ELEMENTS
+                for child in self.node.children
+            ]
+        ):
+            return BLOCK_LAYOUT
+        elif self.node.children:
+            return INLINE_LAYOUT
+        else:
+            return BLOCK_LAYOUT
+
+    def layout(self):
+        self.x = self.parent.x
+        self.width = self.parent.width
+        # Block layouts vertical position begin either after
+        # previous child, or at parent's top edge
+        if self.previous:
+            self.y = self.previous.y + self.previous.height
+        else:
+            self.y = self.parent.y
+
+        mode = self.layout_mode()
+        if mode == BLOCK_LAYOUT:
+            previous = None
+            for child in self.node.children:
+                next = BlockLayout(child, self, previous)
+                self.children.append(next)
+                previous = next
+        else:
+            # cursor_x and cursor_y are relative to x and y, so start at 0
+            self.cursor_x: int = 0
+            self.cursor_y: int = 0
+            self.weight, self.style = Weight.NORMAL.value, Style.ROMAN.value
+            self.height = self.cursor_y
+            self.size: int = 12
+            self.line: list[LineItem] = []
+            self.recurse(self.node)
+            self.flush()
+
+        for child in self.children:
+            child.layout()
+
+        if mode == BLOCK_LAYOUT:
+            self.height = sum([child.height for child in self.children])
+        else:
+            self.height = self.cursor_y
+
+    def paint(self):
+        return self.display_list

@@ -1,10 +1,10 @@
 import argparse
 import tkinter
 import tkinter.font
+from document_layout import DocumentLayout
 from parser import HTMLParser, Element, Text, ViewSourceHTMLParser
 
 from constants import HEIGHT, SCROLL_STEP, SCROLLBAR_WIDTH, TEST_FILE, VSTEP, WIDTH
-from layout import Layout
 from typedclasses import ScrollbarCoordinate
 from url import URL
 
@@ -13,6 +13,13 @@ def print_tree(node, indent=0):
     print(" " * indent, node)
     for child in node.children:
         print_tree(child, indent + 2)
+
+
+def paint_tree(layout_object, display_list):
+    display_list.extend(layout_object.paint())
+
+    for child in layout_object.children:
+        paint_tree(child, display_list)
 
 
 class Browser:
@@ -46,9 +53,12 @@ class Browser:
             self.nodes = ViewSourceHTMLParser(body).parse()
         else:
             self.nodes = HTMLParser(body).parse()
-        self.display_list = Layout(
-            tree=self.nodes, width=self.screen_width, rtl=self.rtl
-        ).display_list
+        self.document = DocumentLayout(
+            node=self.nodes  # , width=self.screen_width, rtl=self.rtl
+        )
+        self.document.layout()
+        self.display_list = []
+        paint_tree(self.document, self.display_list)
         self.draw()
 
     # Exercise 2.4
@@ -129,9 +139,8 @@ class Browser:
     def resize(self, e: tkinter.Event) -> None:
         self.screen_height = e.height
         self.screen_width = e.width
-        self.display_list = Layout(
-            tree=self.nodes, width=self.screen_width, rtl=self.rtl
-        ).display_list
+        self.display_list = []
+        paint_tree(self.document, self.display_list)
         self.draw()
 
 
