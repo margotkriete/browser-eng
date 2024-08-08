@@ -12,6 +12,7 @@ from constants import (
     INLINE_LAYOUT,
     BLOCK_LAYOUT,
 )
+from draw import DrawRect, DrawText
 from font_cache import get_font
 from typedclasses import DisplayListItem, LineItem
 from parser import Text, Element
@@ -135,7 +136,9 @@ class BlockLayout:
         for item in self.line:
             y = self.y + baseline - item.font.metrics("ascent")
             item.x += self.x + offset
-            self.display_list.append(DisplayListItem(item.x, y, item.text, item.font))
+            self.display_list.append(
+                DrawText(x1=item.x, y1=y, text=item.text, font=item.font)
+            )
 
         # Update cursor_x and cursor_y
         # cursor_y moves below baseline to account for deepest character
@@ -181,7 +184,7 @@ class BlockLayout:
         self.family = None
         self.abbr: bool = False
         self.alignment: Enum = Alignment.RIGHT
-        self.display_list: list[DisplayListItem] = []
+        self.display_list: list[DrawText | DrawRect] = []
         self.x: int = None
         self.y: int = None
 
@@ -246,4 +249,17 @@ class BlockLayout:
             self.height = self.cursor_y
 
     def paint(self):
-        return self.display_list
+        cmds: list[DrawText] = []
+
+        if isinstance(self.node, Element) and self.node.tag == "pre":
+            x2, y2 = self.x + self.width, self.y + self.height
+            rect = DrawRect(self.x, self.y, x2, y2, "gray")
+            cmds.append(rect)
+
+        if self.layout_mode() == INLINE_LAYOUT:
+            for item in self.display_list:
+                cmds.append(
+                    DrawText(x1=item.left, y1=item.top, text=item.text, font=item.font)
+                )
+
+        return cmds
