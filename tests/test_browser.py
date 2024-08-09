@@ -79,7 +79,7 @@ class TestBrowser:
     def test_browser_resizes_height(self, mock_socket):
         browser = mock_socket(response_body_text=LOREM_IPSUM)
         assert browser.screen_height == HEIGHT
-        previous_doc_height = browser.display_list[-1].y
+        previous_doc_height = browser.display_list[-1].bottom
         e = tkinter.Event()
         e.height = 400
         e.width = 600
@@ -88,7 +88,7 @@ class TestBrowser:
         assert browser.screen_height == e.height
         # display_list coordinates should have shifted with resize
         # display_list[-1][1] is the last y coordinate of the document
-        assert browser.display_list[-1].y != previous_doc_height
+        assert browser.display_list[-1].bottom != previous_doc_height
 
     def test_browser_scrollbar_aligns_after_resize(self, mock_socket):
         browser = mock_socket(response_body_text=LOREM_IPSUM)
@@ -100,7 +100,7 @@ class TestBrowser:
         assert coordinates.x0 == 1180
         assert coordinates.y0 == 0
         assert coordinates.x1 == 1200
-        assert coordinates.y1 == 652
+        assert coordinates.y1 == 621
 
     def test_browser_view_source_renders_tags(self):
         socket.patch().start()

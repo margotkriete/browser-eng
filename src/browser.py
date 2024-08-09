@@ -98,6 +98,7 @@ class Browser:
 
     def draw(self):
         self.canvas.delete("text")
+        print("display list", self.display_list)
         for cmd in self.display_list:
             if cmd.top > self.scroll + self.screen_height:
                 continue
