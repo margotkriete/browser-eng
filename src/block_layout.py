@@ -14,7 +14,7 @@ from constants import (
 )
 from draw import DrawRect, DrawText
 from font_cache import get_font
-from typedclasses import DisplayListItem, LineItem
+from typedclasses import LineItem
 from parser import Text, Element
 from typing import Literal, Optional
 
@@ -230,7 +230,6 @@ class BlockLayout:
                 self.children.append(next)
                 previous = next
         else:
-            # cursor_x and cursor_y are relative to x and y, so start at 0
             self.cursor_x: int = 0
             self.cursor_y: int = 0
             self.weight, self.style = Weight.NORMAL.value, Style.ROMAN.value

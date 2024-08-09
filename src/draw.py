@@ -1,5 +1,8 @@
+import tkinter.font
+
+
 class DrawText:
-    def __init__(self, x1, y1, text, font):
+    def __init__(self, x1: int, y1: int, text: str, font: tkinter.font.Font):
         self.top = y1
         self.left = x1
         self.text = text
@@ -8,12 +11,17 @@ class DrawText:
 
     def execute(self, scroll, canvas):
         canvas.create_text(
-            self.left, self.top - scroll, text=self.text, font=self.font, anchor="nw"
+            self.left,
+            self.top - scroll,
+            text=self.text,
+            font=self.font,
+            anchor="nw",
+            tag="text",
         )
 
 
 class DrawRect:
-    def __init__(self, x1, y1, x2, y2, color):
+    def __init__(self, x1: int, y1: int, x2: int, y2: int, color: str):
         self.top = y1
         self.left = x1
         self.bottom = y2
@@ -28,4 +36,5 @@ class DrawRect:
             self.bottom - scroll,
             width=0,
             fill=self.color,
+            tag="text",
         )

@@ -54,7 +54,6 @@ class Browser:
             self.nodes = ViewSourceHTMLParser(body).parse()
         else:
             self.nodes = HTMLParser(body).parse()
-        print_tree(self.nodes)
         self.document = DocumentLayout(node=self.nodes)
         self.document.layout()
         self.display_list = []
@@ -98,7 +97,7 @@ class Browser:
             )
 
     def draw(self):
-        self.canvas.delete("all")
+        self.canvas.delete("text")
         for cmd in self.display_list:
             if cmd.top > self.scroll + self.screen_height:
                 continue
@@ -132,6 +131,8 @@ class Browser:
     def resize(self, e: tkinter.Event) -> None:
         self.screen_height = e.height
         self.screen_width = e.width
+        self.document = DocumentLayout(node=self.nodes, width=e.width)
+        self.document.layout()
         self.display_list = []
         paint_tree(self.document, self.display_list)
         self.draw()
