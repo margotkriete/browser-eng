@@ -101,7 +101,6 @@ class HTMLParser:
         title = re.search("<title>(.*)</title>", self.body)
         if title:
             self.body = self.body.replace(title.group(1), "")
-
         self.lexer()
         return self.finish()
 
@@ -135,7 +134,7 @@ class HTMLParser:
                 elif IN_ATTR:
                     IN_QUOTED_ATTR = True
                     IN_ATTR = False
-            elif c == " ":
+            elif c == " " or c == "\n":
                 if IN_QUOTED_ATTR:
                     current_attribute += c
                 elif IN_TAG:
