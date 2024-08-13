@@ -241,10 +241,16 @@ class BlockLayout:
     def paint(self) -> list[DrawText | DrawRect]:
         cmds: list[DrawText | DrawRect] = []
 
-        if isinstance(self.node, Element) and self.node.tag == "pre":
-            x2, y2 = self.x + self.width, self.y + self.height
-            rect = DrawRect(self.x, self.y, x2, y2, "gray")
-            cmds.append(rect)
+        if isinstance(self.node, Element):
+            bg_color: str = None
+            if self.node.tag == "pre":
+                bg_color = "gray"
+            if self.node.tag == "nav" and self.node.attributes.get("class") == "links":
+                bg_color = "#eeeeee"
+            if bg_color:
+                x2, y2 = self.x + self.width, self.y + self.height
+                rect = DrawRect(self.x, self.y, x2, y2, bg_color)
+                cmds.append(rect)
 
         if self.layout_mode() == INLINE_LAYOUT:
             for item in self.display_list:
