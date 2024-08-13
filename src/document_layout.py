@@ -8,9 +8,9 @@ class DocumentLayout:
     def __init__(self, node, width: Optional[int] = WIDTH):
         self.node = node
         self.parent = None
-        self.children = []
+        self.children: list[BlockLayout] = []
         self.width = width
-        self.height: int = None
+        self.height: int = 0
         self.x: int = 0
         self.y: int = 0
 

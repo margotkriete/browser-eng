@@ -56,7 +56,7 @@ class Browser:
             self.nodes = HTMLParser(body).parse()
         self.document = DocumentLayout(node=self.nodes)
         self.document.layout()
-        self.display_list = []
+        self.display_list: list = []
         paint_tree(self.document, self.display_list)
         self.draw()
 
@@ -98,7 +98,6 @@ class Browser:
 
     def draw(self):
         self.canvas.delete("text")
-        print("display list", self.display_list)
         for cmd in self.display_list:
             if cmd.top > self.scroll + self.screen_height:
                 continue

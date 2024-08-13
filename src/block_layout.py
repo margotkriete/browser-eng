@@ -147,7 +147,7 @@ class BlockLayout:
         self.cursor_x = 0
         self.line = []
 
-    def recurse(self, tree) -> None:
+    def recurse(self, tree: Text | Element) -> None:
         if isinstance(tree, Text):
             if not self.in_pre:
                 for word in tree.text.split():
@@ -168,36 +168,27 @@ class BlockLayout:
         node: Element | Text,
         parent,
         previous,
-        width: Optional[int] = None,
+        width: int = 0,
         rtl: bool = False,
     ):
         self.node = node
         self.parent = parent
         self.previous = previous
-        self.children = []
-        self.width: Optional[int] = width
+        self.children: list[BlockLayout] = []
+        self.width: int = width
         # height is a public field and always contains the correct value;
         # cursor_y changes as we lay out paragraphs and sometimes "wrong"
-        self.height: Optional[int] = None
+        self.height: int = 0
         self.rtl = rtl
         self.in_pre = False
         self.family = None
         self.abbr: bool = False
         self.alignment: Enum = Alignment.RIGHT
         self.display_list: list[DrawText | DrawRect] = []
-        self.x: int = None
-        self.y: int = None
+        self.x: int = 0
+        self.y: int = 0
 
-    def layout_intermediate(self):
-        previous = None
-        # self.node.children is in the HTML tree
-        for child in self.node.children:
-            next = BlockLayout(child, self, previous)
-            # self.children is in the layout tree
-            self.children.append(next)
-            previous = next
-
-    def layout_mode(self):
+    def layout_mode(self) -> str:
         if isinstance(self.node, Text):
             return INLINE_LAYOUT
         elif any(
@@ -212,7 +203,7 @@ class BlockLayout:
         else:
             return BLOCK_LAYOUT
 
-    def layout(self):
+    def layout(self) -> None:
         self.x = self.parent.x
         self.width = self.parent.width
         # Block layouts vertical position begin either after
@@ -239,16 +230,16 @@ class BlockLayout:
             self.recurse(self.node)
             self.flush()
 
-        for child in self.children:
-            child.layout()
+        for child in self.children:  # type: ignore
+            child.layout()  # type: ignore
 
         if mode == BLOCK_LAYOUT:
             self.height = sum([child.height for child in self.children])
         else:
             self.height = self.cursor_y
 
-    def paint(self):
-        cmds: list[DrawText] = []
+    def paint(self) -> list[DrawText | DrawRect]:
+        cmds: list[DrawText | DrawRect] = []
 
         if isinstance(self.node, Element) and self.node.tag == "pre":
             x2, y2 = self.x + self.width, self.y + self.height
@@ -257,8 +248,11 @@ class BlockLayout:
 
         if self.layout_mode() == INLINE_LAYOUT:
             for item in self.display_list:
-                cmds.append(
-                    DrawText(x1=item.left, y1=item.top, text=item.text, font=item.font)
-                )
+                if isinstance(item, DrawText):
+                    cmds.append(
+                        DrawText(
+                            x1=item.left, y1=item.top, text=item.text, font=item.font
+                        )
+                    )
 
         return cmds
