@@ -27,9 +27,7 @@ class Browser:
     def __init__(self, rtl: bool = False):
         self.window = tkinter.Tk()
         self.canvas = tkinter.Canvas(
-            self.window,
-            width=WIDTH,
-            height=HEIGHT,
+            self.window, width=WIDTH, height=HEIGHT, bg="#ffffff"
         )
         self.canvas.pack(fill="both", expand=1)
         self.scroll = 0
