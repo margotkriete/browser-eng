@@ -1,10 +1,11 @@
 import argparse
 import tkinter
 import tkinter.font
+from document_layout import DocumentLayout
+from draw import DrawText
 from parser import HTMLParser, Element, Text, ViewSourceHTMLParser
 
 from constants import HEIGHT, SCROLL_STEP, SCROLLBAR_WIDTH, TEST_FILE, VSTEP, WIDTH
-from layout import Layout
 from typedclasses import ScrollbarCoordinate
 from url import URL
 
@@ -13,6 +14,13 @@ def print_tree(node, indent=0):
     print(" " * indent, node)
     for child in node.children:
         print_tree(child, indent + 2)
+
+
+def paint_tree(layout_object, display_list):
+    display_list.extend(layout_object.paint())
+
+    for child in layout_object.children:
+        paint_tree(child, display_list)
 
 
 class Browser:
@@ -35,7 +43,7 @@ class Browser:
         self.view_source = False
 
     def _get_page_height(self) -> int:
-        return self.display_list[-1].y
+        return self.display_list[-1].bottom
 
     def load(self, url: URL) -> None:
         body = url.request()
@@ -46,9 +54,10 @@ class Browser:
             self.nodes = ViewSourceHTMLParser(body).parse()
         else:
             self.nodes = HTMLParser(body).parse()
-        self.display_list = Layout(
-            tree=self.nodes, width=self.screen_width, rtl=self.rtl
-        ).display_list
+        self.document = DocumentLayout(node=self.nodes, rtl=self.rtl)
+        self.document.layout()
+        self.display_list: list = []
+        paint_tree(self.document, self.display_list)
         self.draw()
 
     # Exercise 2.4
@@ -89,19 +98,12 @@ class Browser:
 
     def draw(self):
         self.canvas.delete("text")
-        for item in self.display_list:
-            if item.y > self.scroll + self.screen_height:
+        for cmd in self.display_list:
+            if cmd.top > self.scroll + self.screen_height:
                 continue
-            if item.y + VSTEP < self.scroll:
+            if cmd.bottom < self.scroll:
                 continue
-            self.canvas.create_text(
-                item.x,
-                item.y - self.scroll,
-                text=item.text,
-                font=item.font,
-                anchor="nw",
-                tag="text",
-            )
+            cmd.execute(self.scroll, self.canvas)
         self.draw_scrollbar()
 
     def scrolldown(self, e) -> None:
@@ -129,9 +131,10 @@ class Browser:
     def resize(self, e: tkinter.Event) -> None:
         self.screen_height = e.height
         self.screen_width = e.width
-        self.display_list = Layout(
-            tree=self.nodes, width=self.screen_width, rtl=self.rtl
-        ).display_list
+        self.document = DocumentLayout(node=self.nodes, width=e.width, rtl=self.rtl)
+        self.document.layout()
+        self.display_list = []
+        paint_tree(self.document, self.display_list)
         self.draw()
 
 
