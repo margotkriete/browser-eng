@@ -242,10 +242,14 @@ class BlockLayout:
         cmds: list[DrawText | DrawRect] = []
 
         if isinstance(self.node, Element):
-            bg_color: str = None
+            bg_color: str = ""
             if self.node.tag == "pre":
                 bg_color = "gray"
-            if self.node.tag == "nav" and self.node.attributes.get("class") == "links":
+            if (
+                self.node.tag == "nav"
+                and self.node.attributes
+                and self.node.attributes.get("class") == "links"
+            ):
                 bg_color = "#eeeeee"
             if bg_color:
                 x2, y2 = self.x + self.width, self.y + self.height
