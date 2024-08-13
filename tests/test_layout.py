@@ -5,28 +5,27 @@ from browser import paint_tree
 
 
 class TestLayout:
-    def setup(self, html: str) -> list:
+    def setup(self, html: str, rtl: bool = False) -> list:
         tree = HTMLParser(html).parse()
-        document = DocumentLayout(tree)
+        document = DocumentLayout(tree, rtl=rtl)
         document.layout()
         display_list = []
         paint_tree(document, display_list)
         return display_list
 
-    # def test_rtl(self):
-    #     tree = HTMLParser("<head><p>Test1 test2</p>").parse()
-    #     layout = DocumentLayout(tree, rtl=True)
-    #     assert len(display_list) == 2
-    #     word1 = display_list[0]
+    def test_rtl(self):
+        display_list = self.setup("<head><p>Test1 test2</p>", rtl=True)
+        assert len(display_list) == 2
+        word1 = display_list[0]
 
-    #     # x coordinate of first word should be offset
-    #     assert word1.x > HSTEP
-    #     assert word1.text == "Test1"
+        # x coordinate of first word should be offset
+        assert word1.left > HSTEP
+        assert word1.text == "Test1"
 
-    #     word2 = display_list[1]
-    #     # Word 2 should lay out after word 1
-    #     assert word2.x > word1.x
-    #     assert word2.text == "test2"
+        word2 = display_list[1]
+        # Word 2 should lay out after word 1
+        assert word2.left > word1.left
+        assert word2.text == "test2"
 
     def test_h1_center_align(self):
         display_list = self.setup("<head><h1 class='title'>Test1 test2</h1>test3")

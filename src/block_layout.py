@@ -30,6 +30,31 @@ class BlockLayout:
     weight: Literal["bold", "normal"]
     family: Optional[str]
 
+    def __init__(
+        self,
+        node: Element | Text,
+        parent,
+        previous,
+        width: int = 0,
+        rtl: bool = False,
+    ):
+        self.node = node
+        self.parent = parent
+        self.previous = previous
+        self.children: list[BlockLayout] = []
+        self.width: int = width
+        # height is a public field and always contains the correct value;
+        # cursor_y changes as we lay out paragraphs and sometimes "wrong"
+        self.height: int = 0
+        self.rtl = rtl
+        self.in_pre = False
+        self.family = None
+        self.abbr: bool = False
+        self.alignment: Enum = Alignment.RIGHT
+        self.display_list: list[DrawText | DrawRect] = []
+        self.x: int = 0
+        self.y: int = 0
+
     def _handle_soft_hyphen(self, word: str, font: tkinter.font.Font) -> None:
         # If word has a soft hyphen, append string before hyphen to the current
         # line, start a new line, and call .word on the rest of the word
@@ -163,31 +188,6 @@ class BlockLayout:
                 self.recurse(child)
             self.close_tag(tree.tag, tree.attributes)
 
-    def __init__(
-        self,
-        node: Element | Text,
-        parent,
-        previous,
-        width: int = 0,
-        rtl: bool = False,
-    ):
-        self.node = node
-        self.parent = parent
-        self.previous = previous
-        self.children: list[BlockLayout] = []
-        self.width: int = width
-        # height is a public field and always contains the correct value;
-        # cursor_y changes as we lay out paragraphs and sometimes "wrong"
-        self.height: int = 0
-        self.rtl = rtl
-        self.in_pre = False
-        self.family = None
-        self.abbr: bool = False
-        self.alignment: Enum = Alignment.RIGHT
-        self.display_list: list[DrawText | DrawRect] = []
-        self.x: int = 0
-        self.y: int = 0
-
     def layout_mode(self) -> str:
         if isinstance(self.node, Text):
             return INLINE_LAYOUT
@@ -217,7 +217,7 @@ class BlockLayout:
         if mode == BLOCK_LAYOUT:
             previous = None
             for child in self.node.children:
-                next = BlockLayout(child, self, previous)
+                next = BlockLayout(child, self, previous, rtl=self.rtl)
                 self.children.append(next)
                 previous = next
         else:

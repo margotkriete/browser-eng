@@ -45,22 +45,22 @@ class TestBrowser:
         # Words should have the same y coordinate
         assert first_word.top == second_word.top
 
-    # def test_browser_loads_rtl(self, mock_socket):
-    #     browser = mock_socket(rtl=True)
-    #     assert len(browser.display_list) == 2
-    #     first_word = browser.display_list[0]
-    #     second_word = browser.display_list[1]
-    #     assert first_word.text == "Body"
-    #     assert second_word.text == "text"
+    def test_browser_loads_rtl(self, mock_socket):
+        browser = mock_socket(rtl=True)
+        assert len(browser.display_list) == 2
+        first_word = browser.display_list[0]
+        second_word = browser.display_list[1]
+        assert first_word.text == "Body"
+        assert second_word.text == "text"
 
-    #     # "Body" should have a smaller x coordinate than "text"
-    #     assert first_word.left < second_word.left
-    #     # Words should have the same y coordinate
-    #     assert first_word.top == second_word.top
+        # "Body" should have a smaller x coordinate than "text"
+        assert first_word.left < second_word.left
+        # Words should have the same y coordinate
+        assert first_word.top == second_word.top
 
-    #     # Using rtl layout, first x coordinate should be > HSTEP if line does not
-    #     # span entire width
-    #     assert first_word.left > HSTEP
+        # Using rtl layout, first x coordinate should be > HSTEP if line does not
+        # span entire width
+        assert first_word.left > HSTEP
 
     def test_browser_resizes_width(self, mock_socket):
         browser = mock_socket(response_body_text=LOREM_IPSUM)

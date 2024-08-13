@@ -54,7 +54,7 @@ class Browser:
             self.nodes = ViewSourceHTMLParser(body).parse()
         else:
             self.nodes = HTMLParser(body).parse()
-        self.document = DocumentLayout(node=self.nodes)
+        self.document = DocumentLayout(node=self.nodes, rtl=self.rtl)
         self.document.layout()
         self.display_list: list = []
         paint_tree(self.document, self.display_list)
@@ -131,7 +131,7 @@ class Browser:
     def resize(self, e: tkinter.Event) -> None:
         self.screen_height = e.height
         self.screen_width = e.width
-        self.document = DocumentLayout(node=self.nodes, width=e.width)
+        self.document = DocumentLayout(node=self.nodes, width=e.width, rtl=self.rtl)
         self.document.layout()
         self.display_list = []
         paint_tree(self.document, self.display_list)
