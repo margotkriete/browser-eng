@@ -37,6 +37,7 @@ class BlockLayout:
         previous,
         width: int = 0,
         rtl: bool = False,
+        alignment: Enum = Alignment.RIGHT,
     ):
         self.node = node
         self.parent = parent
@@ -50,7 +51,7 @@ class BlockLayout:
         self.in_pre = False
         self.family = None
         self.abbr: bool = False
-        self.alignment: Enum = Alignment.RIGHT
+        self.alignment: Enum = alignment
         self.display_list: list[DrawText | DrawRect] = []
         self.x: int = 0
         self.y: int = 0
@@ -107,7 +108,7 @@ class BlockLayout:
                 self.flush()
                 self.cursor_y += VSTEP
             case "h1":
-                if attributes and attributes.get("class") == "title":
+                if self.alignment == Alignment.CENTER:
                     self.flush()
                     self.alignment = Alignment.RIGHT
             case "abbr":
@@ -218,7 +219,9 @@ class BlockLayout:
             previous = None
             for child in self.node.children:
                 if isinstance(child, Element) and child.tag != "head":
-                    next = BlockLayout(child, self, previous, rtl=self.rtl)
+                    next = BlockLayout(
+                        child, self, previous, rtl=self.rtl, alignment=self.alignment
+                    )
                     self.children.append(next)
                     previous = next
         else:
