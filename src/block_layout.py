@@ -217,9 +217,10 @@ class BlockLayout:
         if mode == BLOCK_LAYOUT:
             previous = None
             for child in self.node.children:
-                next = BlockLayout(child, self, previous, rtl=self.rtl)
-                self.children.append(next)
-                previous = next
+                if isinstance(child, Element) and child.tag != "head":
+                    next = BlockLayout(child, self, previous, rtl=self.rtl)
+                    self.children.append(next)
+                    previous = next
         else:
             self.cursor_x: int = 0
             self.cursor_y: int = 0
