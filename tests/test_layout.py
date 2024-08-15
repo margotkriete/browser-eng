@@ -29,12 +29,12 @@ class TestLayout:
 
     def test_h1_center_align(self):
         display_list = self.setup("<h1 class='title'>Test1 test2</h1>test3")
-        assert len(display_list) == 2
+        assert len(display_list) == 3
         # Ensure title is centered
         word1 = display_list[0]
         assert word1.left > HSTEP
         # Word 3 is outside of h1 tag so, should be right-aligned
-        word3 = display_list[1]
+        word3 = display_list[2]
         assert word3.left == HSTEP
 
     def test_abbr_tag(self):

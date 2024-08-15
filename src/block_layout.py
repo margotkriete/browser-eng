@@ -94,7 +94,7 @@ class BlockLayout:
                 self.in_pre = True
                 self.family = "Courier New"
 
-    def close_tag(self, tag: str, attributes: Optional[dict] = None) -> None:
+    def close_tag(self, tag: str) -> None:
         match tag:
             case "i":
                 self.style = Style.ROMAN.value
@@ -187,7 +187,7 @@ class BlockLayout:
             self.open_tag(tree.tag, tree.attributes)
             for child in tree.children:
                 self.recurse(child)
-            self.close_tag(tree.tag, tree.attributes)
+            self.close_tag(tree.tag)
 
     def layout_mode(self) -> str:
         if isinstance(self.node, Text):
@@ -218,7 +218,8 @@ class BlockLayout:
         if mode == BLOCK_LAYOUT:
             previous = None
             for child in self.node.children:
-                if isinstance(child, Element) and child.tag != "head":
+                child_is_element = isinstance(child, Element)
+                if (child_is_element and child.tag != "head") or not child_is_element:
                     next = BlockLayout(
                         child, self, previous, rtl=self.rtl, alignment=self.alignment
                     )

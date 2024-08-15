@@ -98,9 +98,6 @@ class HTMLParser:
         return tag, attrs_dict
 
     def parse(self) -> Element | Text:
-        title = re.search("<title>(.*)</title>", self.body)
-        if title:
-            self.body = self.body.replace(title.group(1), "")
         self.lexer()
         return self.finish()
 
@@ -123,8 +120,8 @@ class HTMLParser:
             False,
         )
         body_length: int = len(self.body)
-        attributes = []
-        current_attribute = ""
+        attributes: list[str] = []
+        current_attribute: str = ""
 
         for i, c in enumerate(self.body):
             if c == '"' or c == "'":
