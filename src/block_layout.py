@@ -204,11 +204,30 @@ class BlockLayout:
         else:
             return BLOCK_LAYOUT
 
+    def _layout_block_mode(self) -> None:
+        previous = None
+        for child in self.node.children:
+            if isinstance(child, Element) and child.tag == "head":
+                continue
+            next = BlockLayout(
+                child, self, previous, rtl=self.rtl, alignment=self.alignment
+            )
+            self.children.append(next)
+            previous = next
+
+    def _layout_inline_mode(self) -> None:
+        self.cursor_x: int = 0
+        self.cursor_y: int = 0
+        self.weight, self.style = Weight.NORMAL.value, Style.ROMAN.value
+        self.height = self.cursor_y
+        self.size: int = 12
+        self.line: list[LineItem] = []
+        self.recurse(self.node)
+        self.flush()
+
     def layout(self) -> None:
         self.x = self.parent.x
         self.width = self.parent.width
-        # Block layouts vertical position begin either after
-        # previous child, or at parent's top edge
         if self.previous:
             self.y = self.previous.y + self.previous.height
         else:
@@ -216,27 +235,12 @@ class BlockLayout:
 
         mode = self.layout_mode()
         if mode == BLOCK_LAYOUT:
-            previous = None
-            for child in self.node.children:
-                if isinstance(child, Element) and child.tag == "head":
-                    continue
-                next = BlockLayout(
-                    child, self, previous, rtl=self.rtl, alignment=self.alignment
-                )
-                self.children.append(next)
-                previous = next
+            self._layout_block_mode()
         else:
-            self.cursor_x: int = 0
-            self.cursor_y: int = 0
-            self.weight, self.style = Weight.NORMAL.value, Style.ROMAN.value
-            self.height = self.cursor_y
-            self.size: int = 12
-            self.line: list[LineItem] = []
-            self.recurse(self.node)
-            self.flush()
+            self._layout_inline_mode()
 
-        for child in self.children:  # type: ignore
-            child.layout()  # type: ignore
+        for block_child in self.children:
+            block_child.layout()
 
         if mode == BLOCK_LAYOUT:
             self.height = sum([child.height for child in self.children])
