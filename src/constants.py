@@ -103,3 +103,6 @@ CLOSING_HEAD_TAG = "/head"
 
 
 SIBLING_TAGS = ["p", "li"]
+
+# TODO: fill out missing "text-like" elements - look at spec
+TEXT_LIKE_TAGS = ["b", "i"]
