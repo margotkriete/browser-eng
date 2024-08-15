@@ -3,6 +3,7 @@ import tkinter
 import tkinter.font
 from block_layout import BlockLayout
 from document_layout import DocumentLayout
+from draw import DrawRect, DrawText
 from parser import HTMLParser, Element, Text, ViewSourceHTMLParser
 
 from constants import HEIGHT, SCROLL_STEP, SCROLLBAR_WIDTH, TEST_FILE, WIDTH
@@ -17,7 +18,8 @@ def print_tree(node, indent=0):
 
 
 def paint_tree(
-    layout_object: BlockLayout | DocumentLayout, display_list: list[DisplayListItem]
+    layout_object: BlockLayout | DocumentLayout,
+    display_list: list[DisplayListItem | DrawRect | DrawText],
 ):
     display_list.extend(layout_object.paint())
 

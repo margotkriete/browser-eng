@@ -218,13 +218,13 @@ class BlockLayout:
         if mode == BLOCK_LAYOUT:
             previous = None
             for child in self.node.children:
-                child_is_element = isinstance(child, Element)
-                if (child_is_element and child.tag != "head") or not child_is_element:
-                    next = BlockLayout(
-                        child, self, previous, rtl=self.rtl, alignment=self.alignment
-                    )
-                    self.children.append(next)
-                    previous = next
+                if isinstance(child, Element) and child.tag == "head":
+                    continue
+                next = BlockLayout(
+                    child, self, previous, rtl=self.rtl, alignment=self.alignment
+                )
+                self.children.append(next)
+                previous = next
         else:
             self.cursor_x: int = 0
             self.cursor_y: int = 0
