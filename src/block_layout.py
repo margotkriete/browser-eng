@@ -37,6 +37,7 @@ class BlockLayout:
         previous,
         width: int = 0,
         rtl: bool = False,
+        alignment: Enum = Alignment.RIGHT,
     ):
         self.node = node
         self.parent = parent
@@ -50,7 +51,7 @@ class BlockLayout:
         self.in_pre = False
         self.family = None
         self.abbr: bool = False
-        self.alignment: Enum = Alignment.RIGHT
+        self.alignment: Enum = alignment
         self.display_list: list[DrawText | DrawRect] = []
         self.x: int = 0
         self.y: int = 0
@@ -93,7 +94,7 @@ class BlockLayout:
                 self.in_pre = True
                 self.family = "Courier New"
 
-    def close_tag(self, tag: str, attributes: Optional[dict] = None) -> None:
+    def close_tag(self, tag: str) -> None:
         match tag:
             case "i":
                 self.style = Style.ROMAN.value
@@ -107,7 +108,7 @@ class BlockLayout:
                 self.flush()
                 self.cursor_y += VSTEP
             case "h1":
-                if attributes and attributes.get("class") == "title":
+                if self.alignment == Alignment.CENTER:
                     self.flush()
                     self.alignment = Alignment.RIGHT
             case "abbr":
@@ -186,7 +187,7 @@ class BlockLayout:
             self.open_tag(tree.tag, tree.attributes)
             for child in tree.children:
                 self.recurse(child)
-            self.close_tag(tree.tag, tree.attributes)
+            self.close_tag(tree.tag)
 
     def layout_mode(self) -> str:
         if isinstance(self.node, Text):
@@ -217,7 +218,11 @@ class BlockLayout:
         if mode == BLOCK_LAYOUT:
             previous = None
             for child in self.node.children:
-                next = BlockLayout(child, self, previous, rtl=self.rtl)
+                if isinstance(child, Element) and child.tag == "head":
+                    continue
+                next = BlockLayout(
+                    child, self, previous, rtl=self.rtl, alignment=self.alignment
+                )
                 self.children.append(next)
                 previous = next
         else:

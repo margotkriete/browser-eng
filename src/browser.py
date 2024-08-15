@@ -1,12 +1,13 @@
 import argparse
 import tkinter
 import tkinter.font
+from block_layout import BlockLayout
 from document_layout import DocumentLayout
-from draw import DrawText
+from draw import DrawRect, DrawText
 from parser import HTMLParser, Element, Text, ViewSourceHTMLParser
 
-from constants import HEIGHT, SCROLL_STEP, SCROLLBAR_WIDTH, TEST_FILE, VSTEP, WIDTH
-from typedclasses import ScrollbarCoordinate
+from constants import HEIGHT, SCROLL_STEP, SCROLLBAR_WIDTH, TEST_FILE, WIDTH
+from typedclasses import DisplayListItem, ScrollbarCoordinate
 from url import URL
 
 
@@ -16,7 +17,10 @@ def print_tree(node, indent=0):
         print_tree(child, indent + 2)
 
 
-def paint_tree(layout_object, display_list):
+def paint_tree(
+    layout_object: BlockLayout | DocumentLayout,
+    display_list: list[DisplayListItem | DrawRect | DrawText],
+):
     display_list.extend(layout_object.paint())
 
     for child in layout_object.children:

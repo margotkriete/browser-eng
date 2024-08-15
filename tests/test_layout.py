@@ -28,7 +28,7 @@ class TestLayout:
         assert word2.text == "test2"
 
     def test_h1_center_align(self):
-        display_list = self.setup("<head><h1 class='title'>Test1 test2</h1>test3")
+        display_list = self.setup("<h1 class='title'>Test1 test2</h1>test3")
         assert len(display_list) == 3
         # Ensure title is centered
         word1 = display_list[0]
@@ -38,7 +38,7 @@ class TestLayout:
         assert word3.left == HSTEP
 
     def test_abbr_tag(self):
-        display_list = self.setup("<head><abbr>json</abbr>")
+        display_list = self.setup("<abbr>json</abbr>")
         assert len(display_list) == 1
         word1 = display_list[0]
         assert word1.text == "JSON"
