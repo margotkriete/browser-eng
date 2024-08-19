@@ -56,13 +56,17 @@ class BlockLayout:
         self.x: int = 0
         self.y: int = 0
 
-    def _handle_soft_hyphen(self, word: str, font: tkinter.font.Font) -> None:
+    def _handle_soft_hyphen(
+        self, word: str, font: tkinter.font.Font, node, color
+    ) -> None:
         # If word has a soft hyphen, append string before hyphen to the current
         # line, start a new line, and call .word on the rest of the word
         split_text = word.split("&shy;", 1)
-        self.line.append(LineItem(x=self.cursor_x, text=split_text[0] + "-", font=font))
+        self.line.append(
+            LineItem(x=self.cursor_x, text=split_text[0] + "-", font=font, color=color)
+        )
         self.flush()
-        self.word(split_text[1])
+        self.word(split_text[1], node)
 
     def _handle_abbr(
         self, word: str, font: tkinter.font.Font
@@ -73,64 +77,28 @@ class BlockLayout:
                 word = word.replace(char, char.upper())
         return word, font
 
-    def open_tag(self, tag: str, attributes: Optional[dict] = None) -> None:
-        match tag:
-            case "i":
-                self.style = Style.ITALIC.value
-            case "b":
-                self.weight = Weight.BOLD.value
-            case "small":
-                self.size -= 2
-            case "big":
-                self.size += 4
-            case "br":
-                self.flush()
-            case "h1":
-                if attributes and attributes.get("class") == "title":
-                    self.alignment = Alignment.CENTER
-            case "abbr":
-                self.abbr = True
-            case "pre":
-                self.in_pre = True
-                self.family = "Courier New"
-
-    def close_tag(self, tag: str) -> None:
-        match tag:
-            case "i":
-                self.style = Style.ROMAN.value
-            case "b":
-                self.weight = Weight.NORMAL.value
-            case "small":
-                self.size += 2
-            case "big":
-                self.size -= 4
-            case "p":
-                self.flush()
-                self.cursor_y += VSTEP
-            case "h1":
-                if self.alignment == Alignment.CENTER:
-                    self.flush()
-                    self.alignment = Alignment.RIGHT
-            case "abbr":
-                self.abbr = False
-            case "pre":
-                self.in_pre = False
-                self.family = None
-
-    def word(self, word: str) -> None:
-        font = get_font(self.size, self.weight, self.style, self.family)
+    def word(self, word: str, node: Element | Text) -> None:
+        weight = node.style["font-weight"]
+        style = node.style["font-style"]
+        color = node.style["color"]
+        if style == "normal":
+            style = Style.ROMAN.value
+        size: int = int(
+            float(node.style["font-size"][:-2]) * 0.75
+        )  # Convert CSS pixels -> Tk points
+        font = get_font(size, weight, style, self.family)
         if self.abbr:
             word, font = self._handle_abbr(word, font)
         w = font.measure(word)
 
         if self.cursor_x + w > self.width - HSTEP - SCROLLBAR_WIDTH:
             if "&shy;" in word:
-                return self._handle_soft_hyphen(word, font)
+                return self._handle_soft_hyphen(word, font, node, color)
             self.flush()
         elif "&shy;" in word:
             word = word.replace("&shy;", "")
 
-        self.line.append(LineItem(x=self.cursor_x, text=word, font=font))
+        self.line.append(LineItem(x=self.cursor_x, text=word, font=font, color=color))
         if self.in_pre:
             self.cursor_x += w
         else:
@@ -163,7 +131,9 @@ class BlockLayout:
             y = self.y + baseline - item.font.metrics("ascent")
             item.x += self.x + offset
             self.display_list.append(
-                DrawText(x1=item.x, y1=y, text=item.text, font=item.font)
+                DrawText(
+                    x1=item.x, y1=y, text=item.text, font=item.font, color=item.color
+                )
             )
 
         # Update cursor_x and cursor_y
@@ -177,17 +147,20 @@ class BlockLayout:
         if isinstance(tree, Text):
             if not self.in_pre:
                 for word in tree.text.split():
-                    self.word(word)
+                    self.word(word, tree)
             else:
                 for line in tree.text.split("\n"):
-                    self.word(line)
+                    self.word(line, tree)
                     if line:
                         self.flush()
         else:
-            self.open_tag(tree.tag, tree.attributes)
+            if tree.tag == "br":
+                self.flush()
+            if tree.tag == "pre":
+                self.in_pre = True
+                self.family = "Courier New"
             for child in tree.children:
                 self.recurse(child)
-            self.close_tag(tree.tag)
 
     def layout_mode(self) -> str:
         if isinstance(self.node, Text):
@@ -252,15 +225,15 @@ class BlockLayout:
 
         if isinstance(self.node, Element):
             bg_color: str = ""
-            if self.node.tag == "pre":
-                bg_color = "gray"
             if (
                 self.node.tag == "nav"
                 and self.node.attributes
                 and self.node.attributes.get("class") == "links"
             ):
                 bg_color = "#eeeeee"
-            if bg_color:
+            if not bg_color:
+                bg_color = self.node.style.get("background-color", "transparent")
+            if bg_color and bg_color != "transparent":
                 x2, y2 = self.x + self.width - SCROLLBAR_WIDTH, self.y + self.height
                 rect = DrawRect(self.x, self.y, x2, y2, bg_color)
                 cmds.append(rect)
@@ -270,7 +243,11 @@ class BlockLayout:
                 if isinstance(item, DrawText):
                     cmds.append(
                         DrawText(
-                            x1=item.left, y1=item.top, text=item.text, font=item.font
+                            x1=item.left,
+                            y1=item.top,
+                            text=item.text,
+                            font=item.font,
+                            color=item.color,
                         )
                     )
 

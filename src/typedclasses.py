@@ -1,6 +1,5 @@
 import tkinter.font
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass
@@ -24,3 +23,4 @@ class LineItem:
     x: int
     text: str
     font: tkinter.font.Font
+    color: str
