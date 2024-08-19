@@ -261,7 +261,7 @@ class BlockLayout:
             ):
                 bg_color = "#eeeeee"
             if bg_color:
-                x2, y2 = self.x + self.width, self.y + self.height
+                x2, y2 = self.x + self.width - SCROLLBAR_WIDTH, self.y + self.height
                 rect = DrawRect(self.x, self.y, x2, y2, bg_color)
                 cmds.append(rect)
 
