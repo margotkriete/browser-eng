@@ -27,7 +27,6 @@ class BlockLayout:
     abbr: bool
     in_pre: bool
     style: Literal["roman", "italic"]
-    weight: Literal["bold", "normal"]
     family: Optional[str]
 
     def __init__(
@@ -154,19 +153,24 @@ class BlockLayout:
                     if line:
                         self.flush()
         else:
-            if tree.tag == "br":
-                self.flush()
-            if tree.tag == "pre":
-                self.in_pre = True
-                self.family = "Courier New"
-            if (
-                tree.tag == "h1"
-                and tree.attributes
-                and tree.attributes.get("class") == "title"
-            ):
-                self.alignment = Alignment.CENTER
+            self.handle_global_tag_styles(tree)
             for child in tree.children:
                 self.recurse(child)
+
+    def handle_global_tag_styles(self, tree: Element):
+        if tree.tag == "br":
+            self.flush()
+        if tree.tag == "pre":
+            self.in_pre = True
+            self.family = "Courier New"
+        if (
+            tree.tag == "h1"
+            and tree.attributes
+            and tree.attributes.get("class") == "title"
+        ):
+            self.alignment = Alignment.CENTER
+        if tree.tag == "abbr":
+            self.abbr = True
 
     def layout_mode(self) -> str:
         if isinstance(self.node, Text):
@@ -197,7 +201,7 @@ class BlockLayout:
     def _layout_inline_mode(self) -> None:
         self.cursor_x: int = 0
         self.cursor_y: int = 0
-        self.weight, self.style = Weight.NORMAL.value, Style.ROMAN.value
+        self.style = Style.ROMAN.value
         self.height = self.cursor_y
         self.size: int = 12
         self.line: list[LineItem] = []

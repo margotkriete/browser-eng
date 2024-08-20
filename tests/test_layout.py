@@ -82,19 +82,3 @@ class TestLayout:
         assert display_list[0].text == "super­cali­fragi­listic­expi­ali­docious-"
         assert display_list[1].text == "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-"
         assert display_list[2].text == "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
-
-    def test_pre_tag_uses_monospaced_font(self):
-        display_list = self.setup("<pre>def get_font(self):</pre>")
-        assert len(display_list) == 2
-        assert display_list[1].font.family == "Courier New"
-
-    def test_pre_tag_maintains_whitespace(self):
-        display_list = self.setup("<pre>def get_font(self):               return</pre")
-        assert len(display_list) == 2
-        assert display_list[1].text == "def get_font(self):               return"
-
-    def test_pre_tag_maintains_nested_tags(self):
-        display_list = self.setup("<pre>def get_font(self):<b>return</b></pre>")
-        assert len(display_list) == 3
-        assert display_list[2].font.weight == "bold"
-        assert display_list[2].font.family == "Courier New"

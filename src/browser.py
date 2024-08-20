@@ -85,6 +85,8 @@ class Browser:
         self.document.layout()
         self.display_list: list = []
         paint_tree(self.document, self.display_list)
+        for item in self.display_list:
+            print("display list item", item.text)
         self.draw()
 
     # Exercise 2.4
