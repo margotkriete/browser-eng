@@ -70,7 +70,6 @@ class CSSParser:
                 self.literal(";")
                 self.whitespace()
             except Exception as e:
-                # print(f"exception: {e}")
                 why = self.ignore_until([";", "}"])
                 if why == ";":
                     self.literal(";")
@@ -128,16 +127,15 @@ def style(node: Element | Text, rules: list):
         else:
             node.style[property] = default_value
 
-    # style attribute should override style sheet values
-    if isinstance(node, Element) and "style" in node.attributes:
-        pairs: dict = CSSParser(node.attributes["style"]).body()
-        for property, value in pairs.items():
-            node.style[property] = value
-
     for selector, body in rules:
         if not selector.matches(node):
             continue
         for property, value in body.items():
+            node.style[property] = value
+
+    if isinstance(node, Element) and "style" in node.attributes:
+        pairs: dict = CSSParser(node.attributes["style"]).body()
+        for property, value in pairs.items():
             node.style[property] = value
 
     if node.style["font-size"].endswith("%"):

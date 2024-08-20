@@ -159,6 +159,12 @@ class BlockLayout:
             if tree.tag == "pre":
                 self.in_pre = True
                 self.family = "Courier New"
+            if (
+                tree.tag == "h1"
+                and tree.attributes
+                and tree.attributes.get("class") == "title"
+            ):
+                self.alignment = Alignment.CENTER
             for child in tree.children:
                 self.recurse(child)
 

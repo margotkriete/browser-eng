@@ -2,11 +2,13 @@ from constants import HSTEP
 from document_layout import DocumentLayout
 from parser import HTMLParser
 from browser import paint_tree
+from css_parser import style
 
 
 class TestLayout:
     def setup(self, html: str, rtl: bool = False) -> list:
         tree = HTMLParser(html).parse()
+        style(tree, [])
         document = DocumentLayout(tree, rtl=rtl)
         document.layout()
         display_list = []
