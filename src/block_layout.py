@@ -3,6 +3,8 @@ from enum import Enum
 
 from constants import (
     BLOCK_ELEMENTS,
+    HEAD_TAG,
+    TEXT_LIKE_TAGS,
     Alignment,
     Style,
     Weight,
@@ -32,7 +34,7 @@ class BlockLayout:
 
     def __init__(
         self,
-        node: Element | Text,
+        node: list[Element | Text] | Element | Text,
         parent,
         previous,
         width: int = 0,
@@ -190,6 +192,8 @@ class BlockLayout:
             self.close_tag(tree.tag)
 
     def layout_mode(self) -> str:
+        if isinstance(self.node, list):
+            return INLINE_LAYOUT
         if isinstance(self.node, Text):
             return INLINE_LAYOUT
         elif any(
@@ -206,14 +210,32 @@ class BlockLayout:
 
     def _layout_block_mode(self) -> None:
         previous = None
+        siblings: list[Element] = []
         for child in self.node.children:
-            if isinstance(child, Element) and child.tag == "head":
-                continue
+            if isinstance(child, Element):
+                if child.tag == HEAD_TAG:
+                    continue
+                if child.tag in TEXT_LIKE_TAGS:
+                    siblings.append(child)
+                    continue
+                elif siblings:
+                    next = BlockLayout(
+                        siblings, self, previous, rtl=self.rtl, alignment=self.alignment
+                    )
+                    self.children.append(next)
+                    previous = next
+                    siblings = []
             next = BlockLayout(
                 child, self, previous, rtl=self.rtl, alignment=self.alignment
             )
             self.children.append(next)
             previous = next
+
+        if siblings:
+            next = BlockLayout(
+                siblings, self, previous, rtl=self.rtl, alignment=self.alignment
+            )
+            self.children.append(next)
 
     def _layout_inline_mode(self) -> None:
         self.cursor_x: int = 0
@@ -222,7 +244,11 @@ class BlockLayout:
         self.height = self.cursor_y
         self.size: int = 12
         self.line: list[LineItem] = []
-        self.recurse(self.node)
+        if isinstance(self.node, list):
+            for n in self.node:
+                self.recurse(n)
+        else:
+            self.recurse(self.node)
         self.flush()
 
     def layout(self) -> None:
