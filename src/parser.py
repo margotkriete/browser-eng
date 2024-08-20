@@ -1,5 +1,4 @@
-import re
-from typing import Optional, Tuple
+from typing import Any, Optional, Tuple
 from constants import (
     SELF_CLOSING_TAGS,
     HEAD_TAGS,
@@ -17,6 +16,8 @@ class Text:
         self.text: str = text
         self.children: list[Element | Text] = []
         self.parent: Element = parent
+        self.style: dict = {}
+        self.priority: int = 0
 
     def __repr__(self) -> str:
         return repr(self.text)
@@ -33,6 +34,8 @@ class Element:
         self.children: list[Element | Text] = []
         self.parent: Optional[Element] = parent
         self.attributes: Optional[dict] = attributes
+        self.style: dict[str, Any] = {}
+        self.priority: int = 0
 
     def __repr__(self) -> str:
         return f"<{self.tag}>"

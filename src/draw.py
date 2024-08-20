@@ -12,15 +12,15 @@ class DrawText:
         self.bottom = y1 + font.metrics("linespace")
         self.color = color
 
-    def execute(self, scroll: int, canvas: tkinter.Canvas):
+    def execute(self, scroll: int, canvas):
         canvas.create_text(
             self.left,
             self.top - scroll,
             text=self.text,
             font=self.font,
+            fill=self.color,
             anchor="nw",
             tag="text",
-            fill=self.color,
         )
 
 

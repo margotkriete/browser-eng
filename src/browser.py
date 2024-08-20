@@ -35,9 +35,7 @@ DEFAULT_STYLE_SHEET = CSSParser(
 class Browser:
     def __init__(self, rtl: bool = False):
         self.window = tkinter.Tk()
-        self.canvas = tkinter.Canvas(
-            self.window, width=WIDTH, height=HEIGHT, bg="#ffffff"
-        )
+        self.canvas = tkinter.Canvas(self.window, width=WIDTH, height=HEIGHT)
         self.canvas.pack(fill="both", expand=1)
         self.scroll = 0
         self.window.bind("<Down>", self.scrolldown)
@@ -52,12 +50,13 @@ class Browser:
     def _get_page_height(self) -> int:
         return self.display_list[-1].bottom
 
-    def generate_links(self) -> list:
+    def get_stylesheet_links(self) -> list:
         return [
             node.attributes["href"]
             for node in tree_to_list(self.nodes, [])
             if isinstance(node, Element)
             and node.tag == "link"
+            and node.attributes
             and node.attributes.get("rel") == "stylesheet"
             and "href" in node.attributes
         ]
@@ -72,21 +71,20 @@ class Browser:
         else:
             self.nodes = HTMLParser(body).parse()
         rules: list = DEFAULT_STYLE_SHEET.copy()
-        links: list = self.generate_links()
+        links: list = self.get_stylesheet_links()
         for link in links:
-            style_url = url.resolve(link)
+            style_url: URL = url.resolve(link)
             try:
                 body = style_url.request()
             except:
                 continue
+            assert body is not None
             rules.extend(CSSParser(body).parse())
         style(self.nodes, sorted(rules, key=cascade_priority))
         self.document = DocumentLayout(node=self.nodes, rtl=self.rtl)
         self.document.layout()
         self.display_list: list = []
         paint_tree(self.document, self.display_list)
-        for item in self.display_list:
-            print("display list item", item.text)
         self.draw()
 
     # Exercise 2.4

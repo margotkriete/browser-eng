@@ -5,7 +5,6 @@ from constants import (
     BLOCK_ELEMENTS,
     Alignment,
     Style,
-    Weight,
     HSTEP,
     SCROLLBAR_WIDTH,
     VSTEP,
@@ -24,9 +23,7 @@ class BlockLayout:
     cursor_x: int
     line: list
     alignment: Enum
-    abbr: bool
     in_pre: bool
-    style: Literal["roman", "italic"]
     family: Optional[str]
 
     def __init__(
@@ -49,7 +46,6 @@ class BlockLayout:
         self.rtl = rtl
         self.in_pre = False
         self.family = None
-        self.abbr: bool = False
         self.alignment: Enum = alignment
         self.display_list: list[DrawText | DrawRect] = []
         self.x: int = 0
@@ -67,15 +63,6 @@ class BlockLayout:
         self.flush()
         self.word(split_text[1], node)
 
-    def _handle_abbr(
-        self, word: str, font: tkinter.font.Font
-    ) -> tuple[str, tkinter.font.Font]:
-        for char in word:
-            if char.islower() and char.isalpha():
-                font = get_font(self.size - 2, Weight.BOLD.value, self.style)
-                word = word.replace(char, char.upper())
-        return word, font
-
     def word(self, word: str, node: Element | Text) -> None:
         weight = node.style["font-weight"]
         style = node.style["font-style"]
@@ -86,8 +73,9 @@ class BlockLayout:
             float(node.style["font-size"][:-2]) * 0.75
         )  # Convert CSS pixels -> Tk points
         font = get_font(size, weight, style, self.family)
-        if self.abbr:
-            word, font = self._handle_abbr(word, font)
+        is_abbr = isinstance(node, Text) and node.parent.tag == "abbr"
+        if is_abbr:
+            word = word.replace(word, word.upper())
         w = font.measure(word)
 
         if self.cursor_x + w > self.width - HSTEP - SCROLLBAR_WIDTH:
@@ -98,7 +86,7 @@ class BlockLayout:
             word = word.replace("&shy;", "")
 
         self.line.append(LineItem(x=self.cursor_x, text=word, font=font, color=color))
-        if self.in_pre:
+        if self.in_pre or is_abbr:
             self.cursor_x += w
         else:
             self.cursor_x += w + font.measure(" ")
@@ -169,8 +157,6 @@ class BlockLayout:
             and tree.attributes.get("class") == "title"
         ):
             self.alignment = Alignment.CENTER
-        if tree.tag == "abbr":
-            self.abbr = True
 
     def layout_mode(self) -> str:
         if isinstance(self.node, Text):
@@ -201,7 +187,6 @@ class BlockLayout:
     def _layout_inline_mode(self) -> None:
         self.cursor_x: int = 0
         self.cursor_y: int = 0
-        self.style = Style.ROMAN.value
         self.height = self.cursor_y
         self.size: int = 12
         self.line: list[LineItem] = []

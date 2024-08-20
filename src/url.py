@@ -106,7 +106,7 @@ class URL:
                 _, url = url.split("/", 1)
                 if "/" in dir:
                     dir, _ = dir.rsplit("/", 1)
-            url: str = f"{dir}/{url}"
+            url = f"{dir}/{url}"
         if url.startswith("//"):
             return URL(f"{self.scheme}:{url}")
         else:

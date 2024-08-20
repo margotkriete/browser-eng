@@ -1,3 +1,4 @@
+from typing import Union
 from constants import INHERTIED_PROPERTIES
 from parser import Element, Text
 
@@ -12,7 +13,11 @@ class TagSelector:
 
 
 class DescendantSelector:
-    def __init__(self, ancestor: Element | Text, descendant: Element | Text):
+    def __init__(
+        self,
+        ancestor: Union[TagSelector, "DescendantSelector"],
+        descendant: Union[TagSelector, "DescendantSelector"],
+    ):
         self.ancestor = ancestor
         self.descendant = descendant
         self.priority: int = ancestor.priority + descendant.priority
@@ -87,7 +92,7 @@ class CSSParser:
         return None
 
     def selector(self) -> TagSelector | DescendantSelector:
-        out = TagSelector(self.word().casefold())
+        out: TagSelector | DescendantSelector = TagSelector(self.word().casefold())
         self.whitespace()
         while self.i < len(self.s) and self.s[self.i] != "{":
             tag: str = self.word()
@@ -133,7 +138,7 @@ def style(node: Element | Text, rules: list):
         for property, value in body.items():
             node.style[property] = value
 
-    if isinstance(node, Element) and "style" in node.attributes:
+    if isinstance(node, Element) and node.attributes and "style" in node.attributes:
         pairs: dict = CSSParser(node.attributes["style"]).body()
         for property, value in pairs.items():
             node.style[property] = value

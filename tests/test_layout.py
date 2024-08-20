@@ -44,19 +44,7 @@ class TestLayout:
         assert len(display_list) == 1
         word1 = display_list[0]
         assert word1.text == "JSON"
-        assert word1.font.size == 10
-        assert word1.font.weight == "bold"
-
-    def test_abbr_tag_respects_mixed_casing(self):
-        # This doesn't pass the specifications in the exercise, as it
-        # still bolds the uppercase letters in e.g. JsOn
-        display_list = self.setup("<head><abbr>JsOn 123</abbr>")
-        assert len(display_list) == 2
-        word1 = display_list[0]
-        assert word1.text == "JSON"
-        assert word1.font.weight == "bold"
-        word2 = display_list[1]
-        assert word2.font.weight == "normal"
+        assert word1.font.size == 12
 
     def test_soft_hyphen_breaks_long_line(self):
         display_list = self.setup(
