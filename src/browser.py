@@ -1,20 +1,16 @@
 import argparse
 import tkinter
 import tkinter.font
+from parser import Element, HTMLParser, Text, ViewSourceHTMLParser
+
 from block_layout import BlockLayout
+from constants import HEIGHT, SCROLL_STEP, SCROLLBAR_WIDTH, TEST_FILE, WIDTH
+from css_parser import CSSParser, style
 from document_layout import DocumentLayout
 from draw import DrawRect, DrawText
-from parser import HTMLParser, Element, Text, ViewSourceHTMLParser
-
-from constants import HEIGHT, SCROLL_STEP, SCROLLBAR_WIDTH, TEST_FILE, WIDTH
+from helpers import cascade_priority, tree_to_list
 from typedclasses import DisplayListItem, ScrollbarCoordinate
 from url import URL
-
-
-def print_tree(node, indent=0):
-    print(" " * indent, node)
-    for child in node.children:
-        print_tree(child, indent + 2)
 
 
 def paint_tree(
@@ -27,12 +23,19 @@ def paint_tree(
         paint_tree(child, display_list)
 
 
+import os
+
+dir_path = os.path.dirname(os.path.realpath(__file__))
+
+DEFAULT_STYLE_SHEET = CSSParser(
+    open(os.path.join(dir_path, "browser.css")).read()
+).parse()
+
+
 class Browser:
     def __init__(self, rtl: bool = False):
         self.window = tkinter.Tk()
-        self.canvas = tkinter.Canvas(
-            self.window, width=WIDTH, height=HEIGHT, bg="#ffffff"
-        )
+        self.canvas = tkinter.Canvas(self.window, width=WIDTH, height=HEIGHT)
         self.canvas.pack(fill="both", expand=1)
         self.scroll = 0
         self.window.bind("<Down>", self.scrolldown)
@@ -47,8 +50,19 @@ class Browser:
     def _get_page_height(self) -> int:
         return self.display_list[-1].bottom
 
+    def get_stylesheet_links(self) -> list:
+        return [
+            node.attributes["href"]
+            for node in tree_to_list(self.nodes, [])
+            if isinstance(node, Element)
+            and node.tag == "link"
+            and node.attributes
+            and node.attributes.get("rel") == "stylesheet"
+            and "href" in node.attributes
+        ]
+
     def load(self, url: URL) -> None:
-        body = url.request()
+        body: str | None = url.request()
         if not body:
             return
         self.nodes: Element | Text
@@ -56,6 +70,17 @@ class Browser:
             self.nodes = ViewSourceHTMLParser(body).parse()
         else:
             self.nodes = HTMLParser(body).parse()
+        rules: list = DEFAULT_STYLE_SHEET.copy()
+        links: list = self.get_stylesheet_links()
+        for link in links:
+            style_url: URL = url.resolve(link)
+            try:
+                body = style_url.request()
+            except:
+                continue
+            assert body is not None
+            rules.extend(CSSParser(body).parse())
+        style(self.nodes, sorted(rules, key=cascade_priority))
         self.document = DocumentLayout(node=self.nodes, rtl=self.rtl)
         self.document.layout()
         self.display_list: list = []

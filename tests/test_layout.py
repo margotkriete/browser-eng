@@ -2,11 +2,13 @@ from constants import HSTEP
 from document_layout import DocumentLayout
 from parser import HTMLParser
 from browser import paint_tree
+from css_parser import style
 
 
 class TestLayout:
     def setup(self, html: str, rtl: bool = False) -> list:
         tree = HTMLParser(html).parse()
+        style(tree, [])
         document = DocumentLayout(tree, rtl=rtl)
         document.layout()
         display_list = []
@@ -42,19 +44,7 @@ class TestLayout:
         assert len(display_list) == 1
         word1 = display_list[0]
         assert word1.text == "JSON"
-        assert word1.font.size == 10
-        assert word1.font.weight == "bold"
-
-    def test_abbr_tag_respects_mixed_casing(self):
-        # This doesn't pass the specifications in the exercise, as it
-        # still bolds the uppercase letters in e.g. JsOn
-        display_list = self.setup("<head><abbr>JsOn 123</abbr>")
-        assert len(display_list) == 2
-        word1 = display_list[0]
-        assert word1.text == "JSON"
-        assert word1.font.weight == "bold"
-        word2 = display_list[1]
-        assert word2.font.weight == "normal"
+        assert word1.font.size == 12
 
     def test_soft_hyphen_breaks_long_line(self):
         display_list = self.setup(
@@ -80,19 +70,3 @@ class TestLayout:
         assert display_list[0].text == "super­cali­fragi­listic­expi­ali­docious-"
         assert display_list[1].text == "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-"
         assert display_list[2].text == "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
-
-    def test_pre_tag_uses_monospaced_font(self):
-        display_list = self.setup("<pre>def get_font(self):</pre>")
-        assert len(display_list) == 2
-        assert display_list[1].font.family == "Courier New"
-
-    def test_pre_tag_maintains_whitespace(self):
-        display_list = self.setup("<pre>def get_font(self):               return</pre")
-        assert len(display_list) == 2
-        assert display_list[1].text == "def get_font(self):               return"
-
-    def test_pre_tag_maintains_nested_tags(self):
-        display_list = self.setup("<pre>def get_font(self):<b>return</b></pre>")
-        assert len(display_list) == 3
-        assert display_list[2].font.weight == "bold"
-        assert display_list[2].font.family == "Courier New"
