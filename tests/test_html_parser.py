@@ -2,7 +2,7 @@ import pytest
 from parser import HTMLParser
 
 
-class TestParser:
+class TestHTMLParser:
     @pytest.mark.parametrize(
         "input", ["test", "<body>test", "<html><body>test</body></html>"]
     )
