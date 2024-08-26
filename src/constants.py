@@ -115,4 +115,5 @@ INHERTIED_PROPERTIES = {
     "font-style": "normal",
     "font-weight": "normal",
     "color": "black",
+    "font-family": "Times New Roman",
 }

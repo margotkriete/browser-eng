@@ -1,5 +1,6 @@
 import tkinter
 from enum import Enum
+from typing import Literal, Union
 
 from constants import (
     BLOCK_ELEMENTS,
@@ -13,9 +14,8 @@ from constants import (
 )
 from draw import DrawRect, DrawText
 from font_cache import get_font
-from typedclasses import LineItem
+from typedclasses import DisplayListItem, LineItem
 from parser import Text, Element
-from typing import Optional
 
 
 class BlockLayout:
@@ -24,7 +24,6 @@ class BlockLayout:
     line: list
     alignment: Enum
     in_pre: bool
-    family: Optional[str]
 
     def __init__(
         self,
@@ -45,9 +44,8 @@ class BlockLayout:
         self.height: int = 0
         self.rtl = rtl
         self.in_pre = False
-        self.family = None
         self.alignment: Enum = alignment
-        self.display_list: list[DrawText | DrawRect] = []
+        self.display_list: list[DisplayListItem | DrawText | DrawRect] = []
         self.x: int = 0
         self.y: int = 0
 
@@ -64,15 +62,17 @@ class BlockLayout:
         self.word(split_text[1], node)
 
     def word(self, word: str, node: Element | Text) -> None:
-        weight = node.style["font-weight"]
-        style = node.style["font-style"]
-        color = node.style["color"]
+        weight: Literal["bold", "normal"] = node.style["font-weight"]
+        style: Literal["roman", "italic"] = node.style["font-style"]
+        color: str = node.style["color"]
+        family: str = node.style["font-family"]
+
+        # Convert normal -> roman style and CSS pixels -> Tk points
         if style == "normal":
             style = Style.ROMAN.value
-        size: int = int(
-            float(node.style["font-size"][:-2]) * 0.75
-        )  # Convert CSS pixels -> Tk points
-        font = get_font(size, weight, style, self.family)
+        size: int = int(float(node.style["font-size"][:-2]) * 0.75)
+
+        font = get_font(size, weight, style, family)
         is_abbr = isinstance(node, Text) and node.parent.tag == "abbr"
         if is_abbr:
             word = word.replace(word, word.upper())
@@ -91,13 +91,11 @@ class BlockLayout:
         else:
             self.cursor_x += w + font.measure(" ")
 
-        # Increase cursor_y if the character is a newline
         if word == "\n":
             self.cursor_y += VSTEP
             self.cursor_x = HSTEP
 
     def flush(self) -> None:
-        # self.line is a buffer of x positions, computed in the first pass of text
         if not self.line:
             return
 
@@ -150,7 +148,6 @@ class BlockLayout:
             self.flush()
         if tree.tag == "pre":
             self.in_pre = True
-            self.family = "Courier New"
         if (
             tree.tag == "h1"
             and tree.attributes

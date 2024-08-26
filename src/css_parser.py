@@ -180,5 +180,8 @@ def style(node: Element | Text, rules: list[Tuple[Selector, dict]]):
         parent_px: float = float(parent_font_size[:-2])
         node.style["font-size"] = f"{str(node_pct * parent_px)}px"
 
+    if isinstance(node, Element) and node.tag in ["pre", "code"]:
+        node.style["font-family"] = "Courier New"
+
     for child in node.children:
         style(child, rules)
