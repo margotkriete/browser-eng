@@ -3,7 +3,6 @@ from enum import Enum
 from typing import Literal, Union
 
 from constants import (
-    BLOCK_ELEMENTS,
     Alignment,
     Style,
     HSTEP,
@@ -61,7 +60,7 @@ class BlockLayout:
         self.flush()
         self.word(split_text[1], node)
 
-    def handle_entities(self, word: str) -> None:
+    def handle_entities(self, word: str) -> str:
         if "&quot;" in word:
             word = word.replace("&quot;", '"')
         if "&apos;" in word:
@@ -174,7 +173,7 @@ class BlockLayout:
             return INLINE_LAYOUT
         elif any(
             [
-                isinstance(child, Element) and child.tag in BLOCK_ELEMENTS
+                isinstance(child, Element) and child.style.get("display") == "block"
                 for child in self.node.children
             ]
         ):
