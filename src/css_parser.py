@@ -1,9 +1,18 @@
-from typing import Union
-from constants import INHERTIED_PROPERTIES
 from parser import Element, Text
+from typing import Optional, Tuple, Union
+
+from constants import INHERTIED_PROPERTIES
 
 
-class TagSelector:
+class Selector:
+    def __init__(self):
+        self.priority = 1
+
+    def matches(self, node):
+        pass
+
+
+class TagSelector(Selector):
     def __init__(self, tag: str):
         self.tag: str = tag
         self.priority: int = 1
@@ -12,12 +21,26 @@ class TagSelector:
         return isinstance(node, Element) and self.tag == node.tag
 
 
-class DescendantSelector:
-    def __init__(
-        self,
-        ancestor: Union[TagSelector, "DescendantSelector"],
-        descendant: Union[TagSelector, "DescendantSelector"],
-    ):
+class ClassSelector(Selector):
+    def __init__(self, cls: str, tag: Optional[str] = None):
+        self.cls: str = cls
+        self.priority: int = 0
+        self.tag: Optional[str] = tag
+
+    def matches(self, node) -> bool:
+        tag_matches = (
+            self.tag is not None and isinstance(node, Element) and node.tag == self.tag
+        ) or not self.tag
+        return (
+            isinstance(node, Element)
+            and node.attributes is not None
+            and node.attributes.get("class") == self.cls
+            and tag_matches
+        )
+
+
+class DescendantSelector(Selector):
+    def __init__(self, ancestor: Selector, descendant: Selector):
         self.ancestor = ancestor
         self.descendant = descendant
         self.priority: int = ancestor.priority + descendant.priority
@@ -91,29 +114,34 @@ class CSSParser:
                 self.i += 1
         return None
 
-    def selector(self) -> TagSelector | DescendantSelector:
-        out: TagSelector | DescendantSelector = TagSelector(self.word().casefold())
+    def selector(self) -> Selector:
+        out: Selector
+        word = self.word()
+        if "." in word:
+            tag, cls = word.split(".", 1)
+            out = ClassSelector(cls=cls.casefold(), tag=tag.casefold() if tag else None)
+        else:
+            out = TagSelector(word.casefold())
         self.whitespace()
         while self.i < len(self.s) and self.s[self.i] != "{":
-            tag: str = self.word()
+            tag = self.word()
             descendant = TagSelector(tag.casefold())
             out = DescendantSelector(out, descendant)
             self.whitespace()
         return out
 
     def parse(self) -> list:
-        rules: list = []
+        rules: list[Tuple[Selector, dict]] = []
         while self.i < len(self.s):
             try:
                 self.whitespace()
-                selector: TagSelector | DescendantSelector = self.selector()
+                selector: Selector = self.selector()
                 self.literal("{")
                 self.whitespace()
                 body: dict = self.body()
                 self.literal("}")
                 rules.append((selector, body))
-            except Exception as e:
-                # print(f"exception in parse(): {e}")
+            except Exception:
                 why = self.ignore_until(["}"])
                 if why == "}":
                     self.literal("}")
@@ -123,7 +151,7 @@ class CSSParser:
         return rules
 
 
-def style(node: Element | Text, rules: list):
+def style(node: Element | Text, rules: list[Tuple[Selector, dict]]):
     node.style = {}
 
     for property, default_value in INHERTIED_PROPERTIES.items():

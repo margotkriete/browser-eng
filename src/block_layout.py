@@ -15,7 +15,7 @@ from draw import DrawRect, DrawText
 from font_cache import get_font
 from typedclasses import LineItem
 from parser import Text, Element
-from typing import Literal, Optional
+from typing import Optional
 
 
 class BlockLayout:
@@ -111,7 +111,7 @@ class BlockLayout:
             offset = self.width - (HSTEP * 2) - self.cursor_x
 
         if self.alignment == Alignment.CENTER:
-            offset = int((self.width - self.line[-1].x - SCROLLBAR_WIDTH) / 2)
+            offset = int((self.width - self.cursor_x - SCROLLBAR_WIDTH) / 2)
 
         # Add words to display_list
         for item in self.line:
