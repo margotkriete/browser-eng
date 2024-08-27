@@ -61,6 +61,18 @@ class BlockLayout:
         self.flush()
         self.word(split_text[1], node)
 
+    def handle_entities(self, word: str) -> None:
+        if "&quot;" in word:
+            word = word.replace("&quot;", '"')
+        if "&apos;" in word:
+            word = word.replace("&apos;", "'")
+        if "&ndash;" in word or "&hyphen;" in word:
+            word = word.replace("&ndash;", "‐")
+            word = word.replace("&hyphen;", "‐")
+        if "&amp;" in word:
+            word = word.replace("&amp", "&")
+        return word
+
     def word(self, word: str, node: Element | Text) -> None:
         weight: Literal["bold", "normal"] = node.style["font-weight"]
         style: Literal["roman", "italic"] = node.style["font-style"]
@@ -85,13 +97,15 @@ class BlockLayout:
         elif "&shy;" in word:
             word = word.replace("&shy;", "")
 
+        word = self.handle_entities(word)
+
         self.line.append(LineItem(x=self.cursor_x, text=word, font=font, color=color))
         if self.in_pre or is_abbr:
             self.cursor_x += w
         else:
             self.cursor_x += w + font.measure(" ")
 
-        if word == "\n":
+        if "\n" in word:
             self.cursor_y += VSTEP
             self.cursor_x = HSTEP
 
@@ -134,9 +148,9 @@ class BlockLayout:
                 for word in tree.text.split():
                     self.word(word, tree)
             else:
-                for line in tree.text.split("\n"):
+                for line in tree.text.splitlines(keepends=True):
                     self.word(line, tree)
-                    if line:
+                    if line.endswith("\n"):
                         self.flush()
         else:
             self.handle_global_tag_styles(tree)
