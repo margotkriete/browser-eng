@@ -117,3 +117,11 @@ INHERTIED_PROPERTIES = {
     "color": "black",
     "font-family": "Times New Roman",
 }
+
+ENTITY_MAP = {
+    "&quot;": '"',
+    "&apos;": "'",
+    "&ndash;": "-",
+    "&hyphen;": "-",
+    "&amp;": "&",
+}
