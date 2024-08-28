@@ -21,7 +21,6 @@ from parser import Text, Element
 class BlockLayout:
     cursor_y: int
     cursor_x: int
-    in_pre: bool
 
     def __init__(
         self,
@@ -40,7 +39,6 @@ class BlockLayout:
         # cursor_y changes as we lay out paragraphs and sometimes "wrong"
         self.height: int = 0
         self.rtl = rtl
-        self.in_pre = False
         self.display_list: list[DisplayListItem | DrawText | DrawRect] = []
         self.x: int = 0
         self.y: int = 0
@@ -100,14 +98,8 @@ class BlockLayout:
 
     def recurse(self, node: Text | Element) -> None:
         if isinstance(node, Text):
-            # if not self.in_pre:
             for word in node.text.split():
                 self.word(word, node)
-            # else:
-            #     for line in node.text.splitlines(keepends=True):
-            #         self.word(line, node)
-            #         if line.endswith("\n"):
-            #             self.new_line()
         else:
             self.handle_global_tag_styles(node)
             for child in node.children:
@@ -116,8 +108,6 @@ class BlockLayout:
     def handle_global_tag_styles(self, tree: Element):
         if tree.tag == "br":
             self.new_line()
-        if tree.tag == "pre":
-            self.in_pre = True
 
     def layout_mode(self) -> str:
         if isinstance(self.node, Text):

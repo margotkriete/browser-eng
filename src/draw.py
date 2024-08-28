@@ -24,6 +24,23 @@ class DrawText:
         )
 
 
+class DrawOutline:
+    def __init__(self, rect, color: str, thickness: int):
+        self.rect = rect
+        self.color = color
+        self.thickness = thickness
+
+    def execute(self, scroll, canvas: tkinter.Canvas):
+        canvas.create_rectangle(
+            self.rect.left,
+            self.rect.top - scroll,
+            self.rect.right,
+            self.rect.bottom - scroll,
+            width=self.thickness,
+            outline=self.color,
+        )
+
+
 class DrawRect:
     def __init__(self, x1: int, y1: int, x2: int, y2: int, color: str):
         self.top = y1
@@ -42,3 +59,29 @@ class DrawRect:
             fill=self.color,
             tag="text",
         )
+
+
+class DrawLine:
+    def __init__(self, x1: int, y1: int, x2: int, y2: int, color: str, thickness: int):
+        self.rect = ChromeRect(x1, y1, x2, y2)
+        self.color = color
+        self.thickness = thickness
+
+    def execute(self, scroll, canvas):
+        canvas.create_line(
+            self.rect.left,
+            self.rect.top - scroll,
+            self.rect.right,
+            self.rect.bottom - scroll,
+            fill=self.color,
+            width=self.thickness,
+        )
+
+
+# TODO: can this be a dataclass?
+class ChromeRect:
+    def __init__(self, left, top, right, bottom):
+        self.left = left
+        self.top = top
+        self.right = right
+        self.bottom = bottom

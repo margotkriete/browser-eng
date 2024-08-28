@@ -1,29 +1,21 @@
 from typing import Literal
 
-from constants import SCROLLBAR_WIDTH, Alignment, Style
+from constants import SCROLLBAR_WIDTH, Style
 from draw import DrawText
 from font_cache import get_font
-from parser import Element
+from parser import Element, Text
 
 
 class LineLayout:
-    def __init__(self, node, parent, previous):
+    def __init__(self, node: Text | Element, parent, previous):
         self.node = node
         self.parent = parent
         self.previous = previous
         self.children = []
 
-    def layout(self):
+    def layout(self) -> None:
         self.width = self.parent.width
         self.x = self.parent.x
-
-        if (
-            isinstance(self.node, Element)
-            and self.node.attributes
-            and self.node.attributes.get("class") == "title"
-        ):
-            offset = int((self.width - self.x - SCROLLBAR_WIDTH) / 2)
-            self.x += offset
 
         if self.previous:
             self.y = self.previous.y + self.previous.height
@@ -38,7 +30,6 @@ class LineLayout:
             return
 
         max_ascent = max([word.font.metrics("ascent") for word in self.children])
-
         baseline = self.y + 1.25 * max_ascent
         for word in self.children:
             word.y = baseline - word.font.metrics("ascent")
