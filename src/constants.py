@@ -94,9 +94,6 @@ BLOCK_ELEMENTS = [
 
 
 # Styling
-class Alignment(Enum):
-    RIGHT = 1
-    CENTER = 2
 
 
 class Style(Enum):

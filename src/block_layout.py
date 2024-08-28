@@ -3,7 +3,6 @@ from enum import Enum
 from typing import Literal
 
 from constants import (
-    Alignment,
     Style,
     BLOCK_ELEMENTS,
     ENTITY_MAP,
@@ -22,8 +21,6 @@ from parser import Text, Element
 class BlockLayout:
     cursor_y: int
     cursor_x: int
-    line: list
-    alignment: Enum
     in_pre: bool
 
     def __init__(
@@ -33,7 +30,6 @@ class BlockLayout:
         previous,
         width: int = 0,
         rtl: bool = False,
-        alignment: Enum = Alignment.RIGHT,
     ):
         self.node = node
         self.parent = parent
@@ -45,7 +41,6 @@ class BlockLayout:
         self.height: int = 0
         self.rtl = rtl
         self.in_pre = False
-        self.alignment: Enum = alignment
         self.display_list: list[DisplayListItem | DrawText | DrawRect] = []
         self.x: int = 0
         self.y: int = 0
@@ -77,7 +72,6 @@ class BlockLayout:
     def word(self, word: str, node: Element | Text) -> None:
         weight: Literal["bold", "normal"] = node.style["font-weight"]
         style: Literal["roman", "italic"] = node.style["font-style"]
-        color: str = node.style["color"]
         family: str = node.style["font-family"]
 
         # Convert normal -> roman style and CSS pixels -> Tk points
@@ -90,20 +84,19 @@ class BlockLayout:
         if is_abbr:
             word = word.replace(word, word.upper())
         w = font.measure(word)
-
         if self.cursor_x + w > self.width - HSTEP - SCROLLBAR_WIDTH:
             self.new_line()
-            if "&shy;" in word:
-                return self._handle_soft_hyphen(word, font, node, color)
-            self.new_line()
-        elif "&shy;" in word:
-            word = word.replace("&shy;", "")
+            # if "&shy;" in word:
+            # return self._handle_soft_hyphen(word, font, node, color)
+        # elif "&shy;" in word:
+        # word = word.replace("&shy;", "")
 
         word = self.replace_entities(word)
         line = self.children[-1]
         previous_word = line.children[-1] if line.children else None
         text = TextLayout(node, word, line, previous_word)
         line.children.append(text)
+        self.cursor_x += w + font.measure(" ")
 
     def recurse(self, node: Text | Element) -> None:
         if isinstance(node, Text):
@@ -125,12 +118,6 @@ class BlockLayout:
             self.new_line()
         if tree.tag == "pre":
             self.in_pre = True
-        if (
-            tree.tag == "h1"
-            and tree.attributes
-            and tree.attributes.get("class") == "title"
-        ):
-            self.alignment = Alignment.CENTER
 
     def layout_mode(self) -> str:
         if isinstance(self.node, Text):
@@ -152,9 +139,7 @@ class BlockLayout:
         for child in self.node.children:
             if isinstance(child, Element) and child.tag == "head":
                 continue
-            next = BlockLayout(
-                child, self, previous, rtl=self.rtl, alignment=self.alignment
-            )
+            next = BlockLayout(child, self, previous, rtl=self.rtl)
             self.children.append(next)
             previous = next
 

@@ -1,8 +1,9 @@
 from typing import Literal
 
-from constants import Style
+from constants import SCROLLBAR_WIDTH, Alignment, Style
 from draw import DrawText
 from font_cache import get_font
+from parser import Element
 
 
 class LineLayout:
@@ -15,6 +16,15 @@ class LineLayout:
     def layout(self):
         self.width = self.parent.width
         self.x = self.parent.x
+
+        if (
+            isinstance(self.node, Element)
+            and self.node.attributes
+            and self.node.attributes.get("class") == "title"
+        ):
+            offset = int((self.width - self.x - SCROLLBAR_WIDTH) / 2)
+            self.x += offset
+
         if self.previous:
             self.y = self.previous.y + self.previous.height
         else:
