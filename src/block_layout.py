@@ -1,21 +1,20 @@
 import tkinter
-from enum import Enum
+from parser import Element, Text
 from typing import Literal
 
 from constants import (
-    Style,
     BLOCK_ELEMENTS,
+    BLOCK_LAYOUT,
     ENTITY_MAP,
     HSTEP,
-    SCROLLBAR_WIDTH,
     INLINE_LAYOUT,
-    BLOCK_LAYOUT,
+    SCROLLBAR_WIDTH,
+    Style,
 )
-from draw import DrawRect, DrawText
+from draw import DrawRect, DrawText, Rect
 from font_cache import get_font
 from line_layout import LineLayout, TextLayout
 from typedclasses import DisplayListItem, LineItem
-from parser import Text, Element
 
 
 class BlockLayout:
@@ -169,7 +168,11 @@ class BlockLayout:
             if not bg_color:
                 bg_color = self.node.style.get("background-color", "transparent")
             if bg_color and bg_color != "transparent":
-                x2, y2 = self.x + self.width - SCROLLBAR_WIDTH, self.y + self.height
-                rect = DrawRect(self.x, self.y, x2, y2, bg_color)
+                rect = DrawRect(self.self_rect(), bg_color)
                 cmds.append(rect)
         return cmds
+
+    def self_rect(self):
+        return Rect(
+            self.x, self.y, self.x + self.width - SCROLLBAR_WIDTH, self.y + self.height
+        )

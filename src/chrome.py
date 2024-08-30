@@ -1,8 +1,9 @@
 import tkinter.font
 
 from constants import WIDTH
-from draw import ChromeRect, DrawLine, DrawOutline, DrawText
+from draw import Rect, DrawLine, DrawOutline, DrawRect, DrawText
 from font_cache import get_font
+from url import URL
 
 
 class Chrome:
@@ -14,17 +15,30 @@ class Chrome:
         self.tabbar_top = 0
         self.tabbar_bottom: int = self.font_height + 2 * self.padding
         plus_width: int = self.font.measure("+") + 2 * self.padding
-        self.newtab_rect = ChromeRect(
+        self.newtab_rect = Rect(
             self.padding,
             self.padding,
             self.padding + plus_width,
             self.padding + self.font_height,
         )
+        self.bottom = self.tabbar_bottom
+        self.urlbar_top = self.tabbar_bottom
+        self.urlbar_bottom = self.urlbar_top + self.font_height + 2 * self.padding
+        self.bottom = self.urlbar_bottom
 
-    def tab_rect(self, i: int) -> ChromeRect:
-        tabs_start: int = self.newtab_rect + self.padding
+    def click(self, x: int, y: int):
+        if self.newtab_rect.contains_point(x, y):
+            self.browser.new_tab(URL("https://browser.engineering/"))
+        else:
+            for i, tab in enumerate(self.browser.tabs):
+                if self.tab_rect(i).contains_point(x, y):
+                    self.browser.active_tab = tab
+                    break
+
+    def tab_rect(self, i: int) -> Rect:
+        tabs_start: int = self.newtab_rect.right + self.padding
         tab_width = self.font.measure("Tab X") + 2 * self.padding
-        return ChromeRect(
+        return Rect(
             tabs_start + tab_width * i,
             self.tabbar_top,
             tabs_start + tab_width * (i + 1),
@@ -33,6 +47,8 @@ class Chrome:
 
     def paint(self) -> list:
         cmds = []
+        cmds.append(DrawRect(Rect(0, 0, WIDTH, self.bottom), "white"))
+        cmds.append(DrawLine(0, self.bottom, WIDTH, self.bottom, "black", 1))
         cmds.append(DrawOutline(self.newtab_rect, "black", 1))
         cmds.append(
             DrawText(
@@ -69,5 +85,15 @@ class Chrome:
                         bounds.right, bounds.bottom, WIDTH, bounds.bottom, "black", 1
                     )
                 )
-
+        cmds.append(DrawOutline(self.address_rect, "black", 1))
+        url_string = str(self.browser.active_tab.url)
+        cmds.append(
+            DrawText(
+                self.address_rect.left + self.padding,
+                self.address_rect.top,
+                url_string,
+                self.font,
+                "black",
+            )
+        )
         return cmds

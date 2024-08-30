@@ -2,31 +2,27 @@ import os
 import tkinter
 from parser import Element, HTMLParser, Text, ViewSourceHTMLParser
 
-from constants import HEIGHT, SCROLL_STEP, SCROLLBAR_WIDTH, WIDTH
+from constants import HEIGHT, SCROLL_STEP, SCROLLBAR_WIDTH, VSTEP, WIDTH
 from css_parser import CSSParser, style
 from document_layout import DocumentLayout
 from helpers import cascade_priority, paint_tree, tree_to_list
 from typedclasses import ScrollbarCoordinate
 from url import URL
 
-dir_path = os.path.dirname(os.path.realpath(__file__))
-
-DEFAULT_STYLE_SHEET = CSSParser(
-    open(os.path.join(dir_path, "browser.css")).read()
-).parse()
-
 
 class Tab:
-    def __init__(self, rtl: bool = False):
+    def __init__(self, tab_height: int, rtl: bool = False):
         self.scroll = 0
         self.screen_height = HEIGHT
         self.screen_width = WIDTH
         self.rtl = rtl
         self.view_source = False
         self.url = None
+        self.tab_height = tab_height
 
     def _get_page_height(self) -> int:
-        return self.display_list[-1].bottom
+        # return self.display_list[-1].bottom
+        return self.tab_height
 
     def get_stylesheet_links(self) -> list:
         return [
@@ -39,6 +35,10 @@ class Tab:
             and "href" in node.attributes
         ]
 
+    def load_style_sheet(self) -> CSSParser:
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        return CSSParser(open(os.path.join(dir_path, "browser.css")).read()).parse()
+
     def load(self, url: URL) -> None:
         self.url = url
         body: str | None = url.request()
@@ -49,7 +49,7 @@ class Tab:
             self.nodes = ViewSourceHTMLParser(body).parse()
         else:
             self.nodes = HTMLParser(body).parse()
-        rules: list = DEFAULT_STYLE_SHEET.copy()
+        rules: list = self.load_style_sheet().copy()
         links: list = self.get_stylesheet_links()
         for link in links:
             style_url: URL = url.resolve(link)
@@ -101,20 +101,22 @@ class Tab:
                 tags="scrollbar",
             )
 
-    def draw(self, canvas: tkinter.Canvas):
+    def draw(self, canvas: tkinter.Canvas, offset: int):
         for cmd in self.display_list:
-            if cmd.top > self.scroll + self.screen_height:
+            if cmd.rect.top > self.scroll + self.tab_height:
                 continue
-            if cmd.bottom < self.scroll:
+            if cmd.rect.bottom < self.scroll:
                 continue
-            cmd.execute(self.scroll, canvas)
+            cmd.execute(self.scroll - offset, canvas)
         self.draw_scrollbar(canvas)
 
     def scrolldown(self) -> None:
         if not self.display_list:
             return
-        if self.scroll + self.screen_height < self._get_page_height():
-            self.scroll += SCROLL_STEP
+        # if self.scroll + self.screen_height < self._get_page_height():
+        # self.scroll += SCROLL_STEP
+        max_y = max(self.document.height + 2 * VSTEP - self.tab_height, 0)
+        self.scroll = min(self.scroll + SCROLL_STEP, max_y)
 
     def scrollup(self) -> None:
         if self.scroll >= SCROLL_STEP:

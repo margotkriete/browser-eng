@@ -1,7 +1,7 @@
 from constants import HSTEP
 from document_layout import DocumentLayout
 from parser import HTMLParser
-from browser import paint_tree
+from helpers import paint_tree
 from css_parser import style
 
 

@@ -1,6 +1,6 @@
 from typing import Literal
 
-from constants import SCROLLBAR_WIDTH, Style
+from constants import Style
 from draw import DrawText
 from font_cache import get_font
 from parser import Element, Text
