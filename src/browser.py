@@ -16,10 +16,11 @@ class Browser:
         self.window = tkinter.Tk()
         self.canvas = tkinter.Canvas(self.window, width=WIDTH, height=HEIGHT)
         self.canvas.pack(fill="both", expand=1)
+        self.screen_width = WIDTH
         self.chrome = Chrome(self)
         self.window.bind("<Down>", self.handle_down)
         self.window.bind("<Up>", self.handle_up)
-        # self.window.bind("<Configure>", self.resize)
+        self.window.bind("<Configure>", self.resize)
         self.window.bind("<Button-1>", self.handle_click)
         self.window.bind("<Key>", self.handle_key)
         self.window.bind("<Return>", self.handle_enter)
@@ -66,21 +67,9 @@ class Browser:
         self.tabs.append(new_tab)
         self.draw()
 
-    # # Exercise 2.3
-    # def resize(self, e: tkinter.Event) -> None:
-    #     self.screen_height = e.height
-    #     self.screen_width = e.width
-    #     self.document = DocumentLayout(node=self.nodes, width=e.width, rtl=self.rtl)
-    #     self.document.layout()
-    #     self.display_list = []
-    #     paint_tree(self.document, self.display_list)
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "-r", help="Lay characters from right to left", action="store_true"
-    )
     parser.add_argument(
         "url",
         metavar="URL",

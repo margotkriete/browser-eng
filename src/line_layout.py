@@ -12,6 +12,8 @@ class LineLayout:
         self.parent = parent
         self.previous = previous
         self.children = []
+        self.x = None
+        self.y = None
 
     def layout(self) -> None:
         self.width = self.parent.width

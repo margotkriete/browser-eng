@@ -9,6 +9,7 @@ from url import URL
 class Chrome:
     def __init__(self, browser):
         self.browser = browser
+        self.browser_width = self.browser.screen_width
         self.font: tkinter.font.Font = get_font(20, "normal", "roman")
         self.font_height: int = self.font.metrics("linespace")
         self.padding: int = 5
@@ -36,7 +37,7 @@ class Chrome:
         self.address_rect = Rect(
             self.back_rect.top + self.padding,
             self.urlbar_top + self.padding,
-            WIDTH - self.padding,
+            self.browser_width - self.padding,
             self.urlbar_bottom - self.padding,
         )
         self.focus = None
@@ -77,8 +78,10 @@ class Chrome:
         )
 
     def _paint_new_tab_button(self, cmds):
-        cmds.append(DrawRect(Rect(0, 0, WIDTH, self.bottom), "white"))
-        cmds.append(DrawLine(0, self.bottom, WIDTH, self.bottom, "black", 1))
+        cmds.append(DrawRect(Rect(0, 0, self.browser_width, self.bottom), "white"))
+        cmds.append(
+            DrawLine(0, self.bottom, self.browser_width, self.bottom, "black", 1)
+        )
         cmds.append(DrawOutline(self.newtab_rect, "black", 1))
         cmds.append(
             DrawText(
@@ -114,7 +117,12 @@ class Chrome:
                 )
                 cmds.append(
                     DrawLine(
-                        bounds.right, bounds.bottom, WIDTH, bounds.bottom, "black", 1
+                        bounds.right,
+                        bounds.bottom,
+                        self.browser_width,
+                        bounds.bottom,
+                        "black",
+                        1,
                     )
                 )
 

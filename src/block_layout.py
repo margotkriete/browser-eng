@@ -27,7 +27,6 @@ class BlockLayout:
         parent,
         previous,
         width: int = 0,
-        rtl: bool = False,
     ):
         self.node = node
         self.parent = parent
@@ -37,7 +36,6 @@ class BlockLayout:
         # height is a public field and always contains the correct value;
         # cursor_y changes as we lay out paragraphs and sometimes "wrong"
         self.height: int = 0
-        self.rtl = rtl
         self.display_list: list[DisplayListItem | DrawText | DrawRect] = []
         self.x: int = 0
         self.y: int = 0
@@ -128,7 +126,7 @@ class BlockLayout:
         for child in self.node.children:
             if isinstance(child, Element) and child.tag == "head":
                 continue
-            next = BlockLayout(child, self, previous, rtl=self.rtl)
+            next = BlockLayout(child, self, previous)
             self.children.append(next)
             previous = next
 

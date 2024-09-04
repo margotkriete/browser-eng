@@ -11,18 +11,16 @@ from url import URL
 
 
 class Tab:
-    def __init__(self, tab_height: int, rtl: bool = False):
+    def __init__(self, tab_height: int, screen_height=HEIGHT, screen_width=WIDTH):
         self.scroll = 0
-        self.screen_height = HEIGHT
-        self.screen_width = WIDTH
-        self.rtl = rtl
+        self.screen_height = screen_height
+        self.screen_width = screen_width
         self.view_source = False
         self.url = None
         self.tab_height = tab_height
         self.history: list = []
 
     def _get_page_height(self) -> int:
-        # return self.display_list[-1].bottom
         return self.tab_height
 
     def get_stylesheet_links(self) -> list:
@@ -62,7 +60,7 @@ class Tab:
             assert body is not None
             rules.extend(CSSParser(body).parse())
         style(self.nodes, sorted(rules, key=cascade_priority))
-        self.document = DocumentLayout(node=self.nodes, rtl=self.rtl)
+        self.document = DocumentLayout(node=self.nodes)
         self.document.layout()
         self.display_list: list = []
         paint_tree(self.document, self.display_list)
@@ -115,8 +113,6 @@ class Tab:
     def scrolldown(self) -> None:
         if not self.display_list:
             return
-        # if self.scroll + self.screen_height < self._get_page_height():
-        # self.scroll += SCROLL_STEP
         max_y = max(self.document.height + 2 * VSTEP - self.tab_height, 0)
         self.scroll = min(self.scroll + SCROLL_STEP, max_y)
 
