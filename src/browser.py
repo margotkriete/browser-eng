@@ -21,6 +21,20 @@ class Browser:
         self.window.bind("<Up>", self.handle_up)
         # self.window.bind("<Configure>", self.resize)
         self.window.bind("<Button-1>", self.handle_click)
+        self.window.bind("<Key>", self.handle_key)
+        self.window.bind("<Return>", self.handle_enter)
+
+    def handle_enter(self, e):
+        self.chrome.enter()
+        self.draw()
+
+    def handle_key(self, e):
+        if len(e.char) == 0:
+            return
+        if not (0x20 <= ord(e.char) < 0x7F):
+            return
+        self.chrome.keypress(e.char)
+        self.draw()
 
     def handle_up(self, e):
         self.active_tab.scrollup()

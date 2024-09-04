@@ -19,6 +19,7 @@ class Tab:
         self.view_source = False
         self.url = None
         self.tab_height = tab_height
+        self.history: list = []
 
     def _get_page_height(self) -> int:
         # return self.display_list[-1].bottom
@@ -40,6 +41,7 @@ class Tab:
         return CSSParser(open(os.path.join(dir_path, "browser.css")).read()).parse()
 
     def load(self, url: URL) -> None:
+        self.history.append(url)
         self.url = url
         body: str | None = url.request()
         if not body:
@@ -149,3 +151,9 @@ class Tab:
                 url = self.url.resolve(elt.attributes["href"])
                 return self.load(url)
             elt = elt.parent
+
+    def go_back(self):
+        if len(self.history) > 1:
+            self.history.pop()
+            back: URL = self.history.pop()
+            self.load(back)
