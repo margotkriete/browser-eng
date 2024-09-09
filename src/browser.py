@@ -5,6 +5,8 @@ from typing import Optional
 
 from chrome import Chrome
 from constants import HEIGHT, TEST_FILE, WIDTH
+from document_layout import DocumentLayout
+from helpers import paint_tree
 from tab import Tab
 from url import URL
 
@@ -20,13 +22,24 @@ class Browser:
         self.chrome = Chrome(self)
         self.window.bind("<Down>", self.handle_down)
         self.window.bind("<Up>", self.handle_up)
-        self.window.bind("<Configure>", self.resize)
+        self.window.bind("<Configure>", self.handle_resize)
         self.window.bind("<Button-1>", self.handle_click)
         self.window.bind("<Key>", self.handle_key)
         self.window.bind("<Return>", self.handle_enter)
 
     def handle_enter(self, e):
         self.chrome.enter()
+        self.draw()
+
+    def handle_resize(self, e):
+        self.chrome.browser_width = e.width
+        self.active_tab.document = DocumentLayout(
+            node=self.active_tab.nodes, width=e.width, height=e.height
+        )
+        self.active_tab.document.layout()
+        self.active_tab.tab_height = e.height
+        self.active_tab.display_list = []
+        paint_tree(self.active_tab.document, self.active_tab.display_list)
         self.draw()
 
     def handle_key(self, e):

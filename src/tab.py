@@ -65,7 +65,6 @@ class Tab:
         self.display_list: list = []
         paint_tree(self.document, self.display_list)
 
-    # Exercise 2.4
     def get_scrollbar_coordinates(self) -> ScrollbarCoordinate:
         page_height = self._get_page_height()
         scrollbar_height = int((self.screen_height / page_height) * self.screen_height)
@@ -75,7 +74,6 @@ class Tab:
         y1 = y0 + scrollbar_height
         return ScrollbarCoordinate(x0, y0, x1, y1)
 
-    # Exercise 2.4
     def draw_scrollbar(self, canvas) -> None:
         if not self.display_list:
             return
@@ -120,7 +118,6 @@ class Tab:
         if self.scroll >= SCROLL_STEP:
             self.scroll -= SCROLL_STEP
 
-    # Exercise 2.2
     def mousescroll(self, e) -> None:
         scroll_change = self.scroll - e.delta
         if (scroll_change + self.screen_height < self._get_page_height()) and (
@@ -135,7 +132,10 @@ class Tab:
         objs = [
             obj
             for obj in tree_to_list(self.document, [])
-            if obj.x <= x < obj.x + obj.width and obj.y <= y < obj.y + obj.height
+            if obj.x
+            and obj.y
+            and obj.x <= x < obj.x + obj.width
+            and obj.y <= y < obj.y + obj.height
         ]
         if not objs:
             return
