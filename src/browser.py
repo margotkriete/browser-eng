@@ -26,6 +26,7 @@ class Browser:
         self.window.bind("<Button-1>", self.handle_click)
         self.window.bind("<Key>", self.handle_key)
         self.window.bind("<Return>", self.handle_enter)
+        self.window.bind("<BackSpace>", self.handle_backspace)
 
     def handle_enter(self, e):
         self.chrome.enter()
@@ -41,6 +42,10 @@ class Browser:
         self.active_tab.tab_height = e.height
         self.active_tab.display_list = []
         paint_tree(self.active_tab.document, self.active_tab.display_list)
+        self.draw()
+
+    def handle_backspace(self, e):
+        self.chrome.backspace()
         self.draw()
 
     def handle_key(self, e):
