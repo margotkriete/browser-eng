@@ -94,9 +94,6 @@ BLOCK_ELEMENTS = [
 
 
 # Styling
-class Alignment(Enum):
-    RIGHT = 1
-    CENTER = 2
 
 
 class Style(Enum):
@@ -115,5 +112,13 @@ INHERTIED_PROPERTIES = {
     "font-style": "normal",
     "font-weight": "normal",
     "color": "black",
-    "font-family": "Times New Roman",
+    "font-family": "Courier New",
+}
+
+ENTITY_MAP = {
+    "&quot;": '"',
+    "&apos;": "'",
+    "&ndash;": "-",
+    "&hyphen;": "-",
+    "&amp;": "&",
 }

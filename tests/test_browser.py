@@ -14,10 +14,10 @@ MOCK_BODY_TEXT = b"Body text"
 
 @pytest.fixture
 def mock_socket():
-    def _mock_socket(url=MOCK_URL, rtl=False, response_body_text=MOCK_BODY_TEXT):
+    def _mock_socket(url=MOCK_URL, response_body_text=MOCK_BODY_TEXT):
         socket.patch().start()
         socket.respond(url, mock_http_response(response_body_text))
-        browser = Browser(rtl=rtl)
+        browser = Browser()
         browser.load(URL(url))
         return browser
 
@@ -44,23 +44,6 @@ class TestBrowser:
 
         # Words should have the same y coordinate
         assert first_word.top == second_word.top
-
-    def test_browser_loads_rtl(self, mock_socket):
-        browser = mock_socket(rtl=True)
-        assert len(browser.display_list) == 2
-        first_word = browser.display_list[0]
-        second_word = browser.display_list[1]
-        assert first_word.text == "Body"
-        assert second_word.text == "text"
-
-        # "Body" should have a smaller x coordinate than "text"
-        assert first_word.left < second_word.left
-        # Words should have the same y coordinate
-        assert first_word.top == second_word.top
-
-        # Using rtl layout, first x coordinate should be > HSTEP if line does not
-        # span entire width
-        assert first_word.left > HSTEP
 
     def test_browser_resizes_width(self, mock_socket):
         browser = mock_socket(response_body_text=LOREM_IPSUM)
