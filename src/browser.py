@@ -33,6 +33,7 @@ class Browser:
 
     def handle_resize(self, e):
         self.chrome.browser_width = e.width
+        self.active_tab.screen_width = e.width
         self.active_tab.document = DocumentLayout(
             node=self.active_tab.nodes, width=e.width, height=e.height
         )
