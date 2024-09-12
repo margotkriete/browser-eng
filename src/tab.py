@@ -55,7 +55,7 @@ class Tab:
             style_url: URL = url.resolve(link)
             try:
                 body = style_url.request()
-            except:
+            except Exception:
                 continue
             assert body is not None
             rules.extend(CSSParser(body).parse())

@@ -1,6 +1,5 @@
 import tkinter
 from typing import Literal, Optional
-from constants import Weight
 
 FONTS = {}
 

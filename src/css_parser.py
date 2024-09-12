@@ -1,5 +1,5 @@
 from parser import Element, Text
-from typing import Optional, Tuple, Union
+from typing import Optional, Tuple
 
 from constants import INHERTIED_PROPERTIES
 
@@ -97,7 +97,7 @@ class CSSParser:
                 self.whitespace()
                 self.literal(";")
                 self.whitespace()
-            except Exception as e:
+            except Exception:
                 why = self.ignore_until([";", "}"])
                 if why == ";":
                     self.literal(";")

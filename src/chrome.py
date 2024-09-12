@@ -1,6 +1,5 @@
 import tkinter.font
 
-from constants import WIDTH
 from draw import Rect, DrawLine, DrawOutline, DrawRect, DrawText
 from font_cache import get_font
 from url import URL

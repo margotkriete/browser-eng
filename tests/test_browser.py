@@ -1,6 +1,6 @@
-import pytest
 import tkinter
-from test_utils import socket
+
+import pytest
 
 from browser import Browser
 from constants import HEIGHT, HSTEP, WIDTH
