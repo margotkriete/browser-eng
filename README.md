@@ -1,4 +1,4 @@
-This project is a Python implementation of the [Web Browser Engineering](http://browser.engineering) course. The program builds and launches a basic (and incomplete) web browser.
+This project is a Python implementation of the [Web Browser Engineering](http://browser.engineering) course. The program builds and launches a basic (and incomplete) web browser from scratch in Python, using `tkinter` to build the GUI.
 
 It can request web pages, parse HTML and some CSS, and supports multiple tabs. You can navigate by clicking links, but the browser cannot parse JavaScript or send information to a server.
 
