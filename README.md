@@ -1,8 +1,10 @@
 This project is a Python implementation of the [Web Browser Engineering](http://browser.engineering) course. The program builds and launches a basic (and incomplete) web browser.
 
+It can request web pages, parse HTML and some CSS, and supports multiple tabs. You can navigate by clicking links, but the browser cannot parse JavaScript or send information to a server.
+
 ### Install requirements
 
-Clone this repo, then run:
+Ensure you have [rye](https://rye.astral.sh/) installed. Clone this repo, then run:
 
 ```
 $ rye init
