@@ -13,6 +13,8 @@ def get_font(
     key: tuple = (size, weight, style, family)
     if key not in FONTS:
         font: tkinter.font.Font
+        if style not in ["roman", "italic"]:
+            style = "roman"
         if not family:
             font = tkinter.font.Font(size=size, weight=weight, slant=style)
         else:
