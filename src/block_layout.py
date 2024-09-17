@@ -1,4 +1,5 @@
 import tkinter
+from input_layout import InputLayout
 from parser import Element, Text
 from typing import Literal
 
@@ -8,6 +9,7 @@ from constants import (
     ENTITY_MAP,
     HSTEP,
     INLINE_LAYOUT,
+    INPUT_WIDTH_PX,
     SCROLLBAR_WIDTH,
     Style,
 )
@@ -64,6 +66,23 @@ class BlockLayout:
         new_line = LineLayout(self.node, self, last_line)
         self.children.append(new_line)
 
+    def input(self, node):
+        w: int = INPUT_WIDTH_PX
+        if self.cursor_x + w > self.width:
+            self.new_line()
+        line = self.children[-1]
+        previous_word = line.children[-1] if line.children else None
+        input = InputLayout(node, line, previous_word)
+        line.children.append(input)
+
+        weight = node.style["font-weight"]
+        style = node.style["font-style"]
+        if style == "normal":
+            style = "roman"
+        size = int(float(node.style["font-size"][:-2]) * 0.75)
+        font = get_font(size, weight, style)
+        self.cursor_x += w + font.measure(" ")
+
     def word(self, word: str, node: Element | Text) -> None:
         weight: Literal["bold", "normal"] = node.style["font-weight"]
         style: Literal["roman", "italic"] = node.style["font-style"]
@@ -98,13 +117,13 @@ class BlockLayout:
             for word in node.text.split():
                 self.word(word, node)
         else:
-            self.handle_global_tag_styles(node)
-            for child in node.children:
-                self.recurse(child)
-
-    def handle_global_tag_styles(self, tree: Element):
-        if tree.tag == "br":
-            self.new_line()
+            if node.tag == "br":
+                self.new_line()
+            elif node.tag == "input" or node.tag == "button":
+                self.input(node)
+            else:
+                for child in node.children:
+                    self.recurse(child)
 
     def layout_mode(self) -> str:
         if isinstance(self.node, Text):
