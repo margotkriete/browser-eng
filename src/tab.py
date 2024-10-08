@@ -19,6 +19,7 @@ class Tab:
         self.url = None
         self.tab_height = tab_height
         self.history: list = []
+        self.display_list: list = []
 
     def _get_page_height(self) -> int:
         return self.tab_height
