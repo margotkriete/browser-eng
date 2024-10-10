@@ -48,16 +48,18 @@ The browser uses `tkinter` as the GUI; its main loop is initiated in `browser.py
 
 #### Classes
 
-TODO: document these classes and their utilities
+Classes are mostly found in respective `<classname>.py` files.
 
-- `Chrome`
-- `Browser`
-- `Tab`
-- `URL`
-- `LineLayout`
-- `InputLayout`
-- `BlockLayout`
-- `DocumentLayout`
-- `HTMLParser`
-- `CSSParser`
-- `Draw`
+| Class                     | Description                                                                                                                                                  |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Chrome`                  | Paints the browser chrome, which includes tab rectangles, new tab buttons, and the address bar.                                                              |
+| `Browser`                 | Runs the `tkinter` event loop, which launches and runs the web browser. Delegates click and input events to the active tab. Handles browser window resizing. |
+| `Tab`                     | Handles navigation and rendering of the current tab. Much rendering logic is in `load()` method in `tab.py`.                                                 |
+| `URL`                     | Parses URL strings, connects to URL host using `socket`/`ssl` libraries, sends HTTP requests, and reads HTTP responses.                                      |
+| `LineLayout`/`TextLayout` | Handles layout (coordinates, nodes) for lines and text. `LineLayout` contains `TextLayout` children.                                                         |
+| `InputLayout`             | Handles layout for input elements.                                                                                                                           |
+| `BlockLayout`             | Handles layout for block layout items. These can hold text elements (e.g. `<b>` nodes) or block elements (e.g.`<p>` nodes).                                  |
+| `DocumentLayout`          | Holds a collection of `BlockLayout` objects. A tab has exactly one `DocumentLayout` object.                                                                  |
+| `HTMLParser`              | Lexes HTML text into strings, and parses those strings into a tree of elements and text nodes.                                                               |
+| `CSSParser`               | Parses CSS stylesheets and applies default styling to the browser.                                                                                           |
+| `Draw`                    | Handles drawing of Tkinter rectangles and text.                                                                                                              |
