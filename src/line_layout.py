@@ -41,6 +41,9 @@ class LineLayout:
     def paint(self) -> list:
         return []
 
+    def should_paint(self):
+        return True
+
 
 class TextLayout:
     def __init__(self, node, word, parent, previous):
@@ -74,3 +77,6 @@ class TextLayout:
     def paint(self) -> list:
         color = self.node.style["color"]
         return [DrawText(self.x, self.y, self.word, self.font, color)]
+
+    def should_paint(self):
+        return True

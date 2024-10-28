@@ -8,11 +8,13 @@ from constants import (
     ENTITY_MAP,
     HSTEP,
     INLINE_LAYOUT,
+    INPUT_WIDTH_PX,
     SCROLLBAR_WIDTH,
     Style,
 )
 from draw import DrawRect, DrawText, Rect
 from font_cache import get_font
+from input_layout import InputLayout
 from line_layout import LineLayout, TextLayout
 from typedclasses import DisplayListItem, LineItem
 
@@ -65,14 +67,14 @@ class BlockLayout:
         self.children.append(new_line)
 
     def word(self, word: str, node: Element | Text) -> None:
-        weight: Literal["bold", "normal"] = node.style["font-weight"]
-        style: Literal["roman", "italic"] = node.style["font-style"]
-        family: str = node.style["font-family"]
+        weight: Literal["bold", "normal"] = node.style.get("font-weight", "normal")
+        style: Literal["roman", "italic"] = node.style.get("font-style", "roman")
+        family: str = node.style.get("font-family")
 
         # Convert normal -> roman style and CSS pixels -> Tk points
         if style == "normal":
             style = Style.ROMAN.value
-        size: int = int(float(node.style["font-size"][:-2]) * 0.75)
+        size: int = int(float(node.style.get("font-size", "10px")[:-2]) * 0.75)
 
         font = get_font(size, weight, style, family)
         is_abbr = isinstance(node, Text) and node.parent.tag == "abbr"
@@ -98,13 +100,31 @@ class BlockLayout:
             for word in node.text.split():
                 self.word(word, node)
         else:
-            self.handle_global_tag_styles(node)
-            for child in node.children:
-                self.recurse(child)
+            if node.tag == "br":
+                self.new_line()
+            elif node.tag == "input" or node.tag == "button":
+                self.input(node)
+            else:
+                for child in node.children:
+                    self.recurse(child)
 
-    def handle_global_tag_styles(self, tree: Element):
-        if tree.tag == "br":
+    def input(self, node):
+        w = INPUT_WIDTH_PX
+        if self.cursor_x + w > self.width:
             self.new_line()
+        line = self.children[-1]
+        prev_word = line.children[-1] if line.children else None
+        input = InputLayout(node, line, prev_word)
+        line.children.append(input)
+
+        weight = node.style["font-weight"]
+        style = node.style["font-style"]
+        if style == "normal":
+            style = "roman"
+        size = int(float(node.style["font-size"][:-2]) * 0.75)
+        font = get_font(size, weight, style)
+
+        self.cursor_x += w + font.measure(" ")
 
     def layout_mode(self) -> str:
         if isinstance(self.node, Text):
@@ -116,7 +136,7 @@ class BlockLayout:
             ]
         ):
             return BLOCK_LAYOUT
-        elif self.node.children:
+        elif self.node.children or self.node.tag == "input":
             return INLINE_LAYOUT
         else:
             return BLOCK_LAYOUT
@@ -173,4 +193,9 @@ class BlockLayout:
     def self_rect(self):
         return Rect(
             self.x, self.y, self.x + self.width - SCROLLBAR_WIDTH, self.y + self.height
+        )
+
+    def should_paint(self):
+        return isinstance(self.node, Text) or (
+            self.node.tag != "input" and self.node.tag != "button"
         )

@@ -6,6 +6,7 @@ HSTEP, VSTEP = 13, 18
 WIDTH, HEIGHT = 800, 600
 SCROLL_STEP = 100
 SCROLLBAR_WIDTH = 20
+INPUT_WIDTH_PX = 200
 
 # URL parsing
 TEST_FILE = "/Users/margotkriete/Desktop/test.html"

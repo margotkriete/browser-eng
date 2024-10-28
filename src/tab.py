@@ -20,6 +20,7 @@ class Tab:
         self.tab_height = tab_height
         self.history: list = []
         self.display_list: list = []
+        self.focus = None
 
     def _get_page_height(self) -> int:
         return self.tab_height
@@ -50,7 +51,7 @@ class Tab:
             self.nodes = ViewSourceHTMLParser(body).parse()
         else:
             self.nodes = HTMLParser(body).parse()
-        rules: list = self.load_style_sheet().copy()
+        self.rules: list = self.load_style_sheet().copy()
         links: list = self.get_stylesheet_links()
         for link in links:
             style_url: URL = url.resolve(link)
@@ -59,8 +60,11 @@ class Tab:
             except Exception:
                 continue
             assert body is not None
-            rules.extend(CSSParser(body).parse())
-        style(self.nodes, sorted(rules, key=cascade_priority))
+            self.rules.extend(CSSParser(body).parse())
+        self.render()
+
+    def render(self):
+        style(self.nodes, sorted(self.rules, key=cascade_priority))
         self.document = DocumentLayout(node=self.nodes)
         self.document.layout()
         self.display_list: list = []
@@ -147,6 +151,9 @@ class Tab:
             elif elt.tag == "a" and "href" in elt.attributes:
                 url = self.url.resolve(elt.attributes["href"])
                 return self.load(url)
+            elif elt.tag == "input":
+                elt.attributes["value"] = ""
+                return self.render()
             elt = elt.parent
 
     def go_back(self):

@@ -26,7 +26,8 @@ def paint_tree(
     layout_object: BlockLayout | DocumentLayout,
     display_list: list[DisplayListItem | DrawRect | DrawText],
 ):
-    display_list.extend(layout_object.paint())
+    if layout_object.should_paint():
+        display_list.extend(layout_object.paint())
 
-    for child in layout_object.children:
-        paint_tree(child, display_list)
+        for child in layout_object.children:
+            paint_tree(child, display_list)
