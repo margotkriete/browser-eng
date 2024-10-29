@@ -4,7 +4,7 @@ It can request web pages, parse HTML and some CSS, and supports multiple tabs. Y
 
 ![Preview image](preview-image.png)
 
-### Installation
+## Installation
 
 Ensure you have [rye](https://rye.astral.sh/) installed. Clone this repo, then run:
 
@@ -12,7 +12,7 @@ Ensure you have [rye](https://rye.astral.sh/) installed. Clone this repo, then r
 $ rye init
 ```
 
-### Run browser
+## Usage
 
 You can run the browser by running the following commands from the root directory.
 
@@ -42,11 +42,11 @@ Test cases are in the `tests` directory. To run all tests:
 $ rye test
 ```
 
-### Architecture
+## Architecture
 
 The browser uses `tkinter` as the GUI; its main loop is initiated in `browser.py`.
 
-#### Classes
+### Classes
 
 Classes are mostly found in respective `<classname>.py` files.
 
